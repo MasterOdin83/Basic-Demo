@@ -18,10 +18,21 @@
 - Smoke test manual verificado: login → CRUD de tasks → 401 anónimo.
 
 ## Next steps (en orden de prioridad)
-1. **Completar deploy de servicios a Azure:** crear los App Services de STS y tasks API con `ASPNETCORE_ENVIRONMENT=QA` (carga `appsettings.QA.json`: SQLite local al servicio + CORS hacia la SWA). Luego (a) reemplazar las URLs `REPLACE-*` en `Basic.UI/src/environments/environment.prod.ts` con los hosts reales `*.azurewebsites.net`, y (b) sobreescribir `Jwt__Key` (misma en ambos) y, si el dominio SWA real difiere, `Cors__UiOrigin` como App Settings en Azure. Nota: cada App Service tendrá su propio archivo SQLite (no compartido); Supabase resuelve eso.
-2. **Supabase como segundo storage:** agregar `Npgsql.EntityFrameworkCore.PostgreSQL` a `Basic.Data`, elegir provider por config (`"Database": "sqlite" | "supabase"` + connection string) en `DataExtensions.AddBasicData`. `Basic.Core` no se toca; los repos EF son los mismos.
-3. **Entregable GenAI:** documentar los prompts usados, cómo se validó el código generado (tests, smoke test, revisión del CVE de OpenAPI como ejemplo de pensamiento crítico) y manejo de edge cases/auth.
-4. **Presentación:** guion con user story, capas y demo funcional.
+1. **Pulir la UI (review de Web Interface Guidelines, 2026-07-17)** — hallazgos concretos, todos chicos; el único cambio de comportamiento es el de submits:
+   - `login.html:27` y `tasks.html:27`: los submit se deshabilitan hasta llenar campos; deben quedar habilitados (solo `busy` los bloquea) y validar al enviar con error inline ("Title is required" / credenciales).
+   - `login.html:7`: username sin `autocapitalize="none"` + `spellcheck="false"`.
+   - `login.html:33`: apóstrofe recto en "Don't" → `Don’t`.
+   - `tasks.html:21,67`: el select de status muestra el enum crudo `InProgress` → label "In Progress" (mandando el valor enum igual).
+   - `tasks.html:2,42` y `login.html:2`: headings a Title Case ("New Task", "My Tasks", "Log In"...).
+   - `styles.css:96`: botones sin estado `:hover`.
+   - `styles.css:142`: `.task-main` (hijo flex) sin `min-width: 0` + `overflow-wrap: anywhere` — títulos/descripciones largos sin espacios desbordan la fila.
+   - `styles.css:80`: inputs/selects/buttons sin `touch-action: manipulation`.
+   - `index.html:5`: `<title>` "BasicUI" → "Basic Tasks".
+   - OK verificado (no tocar): labels envuelven inputs, `autocomplete`, `role="alert"/"status"`, `:focus-visible`, confirmación de delete, empty state.
+2. **Completar deploy de servicios a Azure:** crear los App Services de STS y tasks API con `ASPNETCORE_ENVIRONMENT=QA` (carga `appsettings.QA.json`: SQLite local al servicio + CORS hacia la SWA). Luego (a) reemplazar las URLs `REPLACE-*` en `Basic.UI/src/environments/environment.prod.ts` con los hosts reales `*.azurewebsites.net`, y (b) sobreescribir `Jwt__Key` (misma en ambos) y, si el dominio SWA real difiere, `Cors__UiOrigin` como App Settings en Azure. Nota: cada App Service tendrá su propio archivo SQLite (no compartido); Supabase resuelve eso.
+3. **Supabase como segundo storage:** agregar `Npgsql.EntityFrameworkCore.PostgreSQL` a `Basic.Data`, elegir provider por config (`"Database": "sqlite" | "supabase"` + connection string) en `DataExtensions.AddBasicData`. `Basic.Core` no se toca; los repos EF son los mismos.
+4. **Entregable GenAI:** documentar los prompts usados, cómo se validó el código generado (tests, smoke test, revisión del CVE de OpenAPI como ejemplo de pensamiento crítico) y manejo de edge cases/auth.
+5. **Presentación:** guion con user story, capas y demo funcional.
 
 ## Pendientes/backlog acordado
 - Migraciones EF (hoy `EnsureCreated`) cuando el esquema evolucione.
