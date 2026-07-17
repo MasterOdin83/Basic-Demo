@@ -5,7 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Bare 4xx responses stay body-less: rejection details would enable user enumeration.
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(o => o.SuppressMapClientErrors = true);
 builder.Services.AddBasicData(builder.Configuration.GetConnectionString("Default")!);
 builder.Services.AddCors(o => o.AddPolicy("ui", p => p
     .WithOrigins(builder.Configuration["Cors:UiOrigin"]!.Split(';'))

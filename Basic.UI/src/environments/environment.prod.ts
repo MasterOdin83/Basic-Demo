@@ -1,6 +1,6 @@
-// QA/production API hosts. Replace with the real App Service URLs once created.
+// QA/production API origins — scheme included, or HttpClient treats them as relative paths.
 export const environment = {
   production: true,
-  stsUrl: 'https://REPLACE-basic-sts-qa.azurewebsites.net',
-  apiUrl: 'https://qa-demo-api.azurewebsites.net',
+  stsUrl: 'https://qa-demo-sts-h3dxfshgapatdsdf.centralus-01.azurewebsites.net',
+  apiUrl: 'https://qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net',
 };

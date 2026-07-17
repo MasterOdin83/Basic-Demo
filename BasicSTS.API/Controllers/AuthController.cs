@@ -23,9 +23,10 @@ public class AuthController(UserService users, IConfiguration config) : Controll
             var user = await users.RegisterAsync(request.Username, request.Password);
             return CreatedAtAction(nameof(Me), new { }, new { user.Id, user.Username });
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException)
         {
-            return BadRequest(new { error = ex.Message });
+            // No reason in the response: revealing "username taken" etc. enables user enumeration.
+            return BadRequest();
         }
     }
 

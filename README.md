@@ -1,4 +1,4 @@
-# Basic Demo — Task Manager
+# Ballastlane - .NET - Technical Interview Exercise
 
 Simple task management app built for the BLA technical exercise: Clean Architecture, TDD, ASP.NET Core Web API, SQLite, and Angular.
 

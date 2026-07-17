@@ -102,6 +102,16 @@ public class StsEndpointTests : IDisposable
         var register = await _client.PostAsJsonAsync("/api/auth/register", new { username = "bob", password = "short" });
         Assert.Equal(HttpStatusCode.BadRequest, register.StatusCode);
     }
+
+    [Fact]
+    public async Task Register_rejection_reveals_no_reason()
+    {
+        await _client.PostAsJsonAsync("/api/auth/register", new { username = "carol", password = "password123" });
+        var duplicate = await _client.PostAsJsonAsync("/api/auth/register", new { username = "carol", password = "password456" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, duplicate.StatusCode);
+        Assert.Empty(await duplicate.Content.ReadAsStringAsync());
+    }
 }
 
 public class TasksEndpointTests : IDisposable

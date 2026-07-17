@@ -27,6 +27,12 @@ export class Login {
   submit(): void {
     this.error = '';
     this.info = '';
+
+    if (this.mode === 'register' && this.password.length < 8) {
+      this.error = 'Password must be at least 8 characters.';
+      return;
+    }
+
     this.busy = true;
 
     if (this.mode === 'login') {

@@ -1,3 +1,22 @@
+/* Ballast Lane brand theme: near-black surface, #FE5A0B accent, serif display type. */
+:root {
+  --bg: #0a0a0a;
+  --surface: #151312;
+  --surface-2: #1f1b18;
+  --border: #2e2622;
+  --text: #fafaf9;
+  --muted: #a8a29e;
+  --accent: #fe5a0b;
+  --accent-hover: #ff7a33;
+  --accent-ink: #1c0e05;
+  --gradient: linear-gradient(90deg, #ff9a3d, #fe5a0b);
+  --danger: #dc2626;
+  --danger-text: #f87171;
+  --success-text: #4ade80;
+  --font-display: Georgia, 'Times New Roman', serif;
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -5,8 +24,16 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: #f4f5f7;
-  color: #1f2430;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .topbar {
@@ -14,14 +41,19 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  background: #1f2430;
-  color: #fff;
+  padding: 0.85rem 1.25rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
 .topbar h1 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .user {
@@ -38,21 +70,105 @@ body {
   gap: 1.25rem;
 }
 
-.card {
-  background: #fff;
+/* Login page doubles as the recruiter-facing landing: give it room to breathe. */
+.container:has(.login-layout) {
+  max-width: 1100px;
+}
+
+.login-layout {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+  padding-top: 1rem;
+}
+
+@media (min-width: 900px) {
+  .login-layout {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 3rem;
+    padding-top: 2.5rem;
+  }
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin: 0.5rem 0 1rem;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  line-height: 1.15;
+}
+
+.gradient-text {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lede {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.build-facts {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.75rem;
+}
+
+.fact {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  transition: border-color 200ms ease;
+}
+
+.fact h3 {
+  margin: 0 0 0.3rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.fact p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
 }
 
 .card h2 {
   margin: 0 0 1rem;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
 }
 
 .auth-card {
   max-width: 380px;
   margin: 2rem auto 0;
+}
+
+.login-layout .auth-card {
+  margin: 0 auto;
+  width: 100%;
 }
 
 form {
@@ -80,28 +196,35 @@ label {
 input,
 select {
   padding: 0.5rem 0.6rem;
-  border: 1px solid #c8cdd6;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font: inherit;
-  background: #fff;
+  background: var(--surface-2);
+  color: var(--text);
+  color-scheme: dark;
 }
 
 input:focus-visible,
 select:focus-visible,
 button:focus-visible {
-  outline: 2px solid #3457d5;
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
 button {
-  padding: 0.5rem 0.9rem;
+  padding: 0.55rem 0.9rem;
   border: none;
   border-radius: 6px;
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  background: #3457d5;
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-ink);
+  transition: background-color 150ms ease, transform 160ms var(--ease-out-strong);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -110,20 +233,37 @@ button:disabled {
 }
 
 button.secondary {
-  background: #e6e8ee;
-  color: #1f2430;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 button.danger {
-  background: #c62839;
+  background: var(--danger);
+  color: #fff;
 }
 
 button.link {
   background: none;
-  color: #3457d5;
+  color: var(--accent);
   padding: 0.5rem 0;
   font-weight: 500;
   text-decoration: underline;
+}
+
+.hint {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+code {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
 }
 
 .actions {
@@ -144,14 +284,15 @@ button.link {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem;
-  border: 1px solid #e2e5ea;
+  border: 1px solid var(--border);
   border-radius: 8px;
   flex-wrap: wrap;
+  transition: border-color 200ms ease;
 }
 
 .task.done .task-main strong {
   text-decoration: line-through;
-  color: #7a8194;
+  color: var(--muted);
 }
 
 .task-main p {
@@ -166,17 +307,148 @@ button.link {
 }
 
 .muted {
-  color: #7a8194;
+  color: var(--muted);
 }
 
 .error {
-  color: #c62839;
+  color: var(--danger-text);
   margin: 0.25rem 0 0;
 }
 
 .info {
-  color: #1d7a3d;
+  color: var(--success-text);
   margin: 0.25rem 0 0;
+}
+
+/* Requirements coverage — exercise brief mapped to implementation */
+.req-coverage {
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.req-title {
+  margin: 0.5rem 0 0.75rem;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.req-list {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .req-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.req-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 200ms ease;
+}
+
+.req-list li::before {
+  content: '';
+  width: 0.8rem;
+  height: 0.42rem;
+  margin-top: 0.35rem;
+  border-left: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: rotate(-45deg);
+}
+
+.req-list li.pending::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 2px dashed var(--muted);
+  border-radius: 50%;
+  transform: none;
+}
+
+.req-list li strong {
+  font-size: 0.92rem;
+  margin-bottom: 0.2rem;
+}
+
+.req-list li span {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* Entrance — login landing only (seen rarely, so it can delight) */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.hero .eyebrow {
+  animation: rise 350ms var(--ease-out-strong) backwards;
+}
+
+.hero .headline {
+  animation: rise 350ms var(--ease-out-strong) 40ms backwards;
+}
+
+.hero .lede {
+  animation: rise 350ms var(--ease-out-strong) 80ms backwards;
+}
+
+.build-facts .fact {
+  animation: rise 300ms var(--ease-out-strong) backwards;
+}
+
+.build-facts .fact:nth-child(1) { animation-delay: 120ms; }
+.build-facts .fact:nth-child(2) { animation-delay: 170ms; }
+.build-facts .fact:nth-child(3) { animation-delay: 220ms; }
+.build-facts .fact:nth-child(4) { animation-delay: 270ms; }
+.build-facts .fact:nth-child(5) { animation-delay: 320ms; }
+
+.login-layout .auth-card {
+  animation: rise 350ms var(--ease-out-strong) 120ms backwards;
+}
+
+.req-coverage {
+  animation: rise 350ms var(--ease-out-strong) 250ms backwards;
+}
+
+/* Hover states only where a real pointer exists (avoids sticky hover on touch) */
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  button.secondary:hover:not(:disabled) {
+    background: var(--border);
+  }
+
+  button.danger:hover:not(:disabled) {
+    background: #ef4444;
+  }
+
+  button.link:hover:not(:disabled) {
+    background: none;
+    color: var(--accent-hover);
+  }
+
+  .fact:hover,
+  .task:hover,
+  .req-list li:hover {
+    border-color: var(--accent);
+  }
 }
 
 @media (max-width: 540px) {
@@ -186,5 +458,13 @@ button.link {
 
   .task {
     flex-direction: column;
+  }
+}
+
+/* Reduced motion: keep color/opacity feedback, drop movement */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition-property: background-color, color, border-color, opacity !important;
   }
 }
