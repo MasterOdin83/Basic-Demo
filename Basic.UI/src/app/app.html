@@ -1,6 +1,9 @@
 <header class="topbar">
-  <h1>Ballastlane - .NET - Technical Interview Exercise</h1>
+  <h1><a routerLink="/">Ballastlane - .NET - Technical Interview Exercise</a></h1>
   @if (auth.username(); as name) {
+    <nav class="nav" aria-label="Primary">
+      <a routerLink="/tasks" routerLinkActive="active" ariaCurrentWhenActive="page">My tasks</a>
+    </nav>
     <div class="user">
       <span>{{ name }}</span>
       <button type="button" class="secondary" (click)="logout()">Log out</button>

@@ -1,22 +1,31 @@
 <section class="card">
-  <h2>{{ form.id === 0 ? 'New task' : 'Edit task' }}</h2>
+  <h2>New task</h2>
 
-  <form class="task-form" (ngSubmit)="save()">
+  <form class="task-form" [formGroup]="form" (ngSubmit)="save()">
     <label>
-      Title
-      <input name="title" [(ngModel)]="form.title" required maxlength="200" />
+      <span>Title <span class="req" aria-hidden="true">*</span></span>
+      <input
+        formControlName="title"
+        maxlength="200"
+        [class.invalid]="titleInvalid()"
+        [attr.aria-invalid]="titleInvalid()"
+        [attr.aria-describedby]="titleInvalid() ? 'title-error' : null"
+      />
+      @if (titleInvalid()) {
+        <p id="title-error" class="field-error" role="alert">Title is required.</p>
+      }
     </label>
     <label>
       Description
-      <input name="description" [(ngModel)]="form.description" maxlength="1000" />
+      <textarea formControlName="description" maxlength="1000" rows="2"></textarea>
     </label>
     <label>
       Due date
-      <input name="dueDate" type="date" [(ngModel)]="form.dueDate" />
+      <input type="date" formControlName="dueDate" />
     </label>
     <label>
       Status
-      <select name="status" [(ngModel)]="form.status">
+      <select formControlName="status">
         @for (s of statuses; track s) {
           <option [value]="s">{{ s }}</option>
         }
@@ -24,52 +33,96 @@
     </label>
 
     <div class="actions">
-      <button type="submit" [disabled]="busy || !form.title.trim()">
-        {{ form.id === 0 ? 'Add task' : 'Save changes' }}
-      </button>
-      @if (form.id !== 0) {
-        <button type="button" class="secondary" (click)="cancel()">Cancel</button>
-      }
+      <button type="submit" [disabled]="busy()">Add task</button>
     </div>
   </form>
 
-  @if (error) {
-    <p class="error" role="alert">{{ error }}</p>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
   }
 </section>
 
 <section class="card">
-  <h2>My tasks ({{ tasks.length }})</h2>
+  <h2>My tasks ({{ tasks().length }})</h2>
 
-  @if (tasks.length === 0) {
+  @if (tasks().length === 0) {
     <p class="muted">No tasks yet — add your first one above.</p>
   }
 
   <ul class="task-list">
-    @for (task of tasks; track task.id) {
-      <li class="task" [class.done]="task.status === 'Done'">
-        <div class="task-main">
-          <strong>{{ task.title }}</strong>
-          @if (task.description) {
-            <p class="muted">{{ task.description }}</p>
-          }
-          <small class="muted">
-            Due: {{ task.dueDate ? (task.dueDate | date: 'mediumDate') : '—' }}
-          </small>
-        </div>
-        <div class="task-actions">
-          <select
-            [ngModel]="task.status"
-            (ngModelChange)="setStatus(task, $event)"
-            [attr.aria-label]="'Status of ' + task.title"
-          >
-            @for (s of statuses; track s) {
-              <option [value]="s">{{ s }}</option>
+    @for (task of tasks(); track task.id) {
+      <li
+        class="task"
+        [class.done]="task.status === 'Done'"
+        [class.in-progress]="task.status === 'InProgress'"
+        [class.editing]="editingId() === task.id"
+        [style.--i]="$index"
+      >
+        @if (editingId() === task.id) {
+          <form class="task-edit" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+            <label>
+              <span>Title <span class="req" aria-hidden="true">*</span></span>
+              <input
+                formControlName="title"
+                maxlength="200"
+                [class.invalid]="editTitleInvalid()"
+                [attr.aria-invalid]="editTitleInvalid()"
+                [attr.aria-describedby]="editTitleInvalid() ? 'edit-title-error' : null"
+              />
+              @if (editTitleInvalid()) {
+                <p id="edit-title-error" class="field-error" role="alert">Title is required.</p>
+              }
+            </label>
+            <label>
+              Description
+              <textarea formControlName="description" maxlength="1000" rows="2"></textarea>
+            </label>
+            <label>
+              Due date
+              <input type="date" formControlName="dueDate" />
+            </label>
+            <label>
+              Status
+              <select formControlName="status">
+                @for (s of statuses; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+            </label>
+
+            <div class="actions">
+              <button type="submit" [disabled]="busy()">Save changes</button>
+              <button type="button" class="secondary" (click)="cancelEdit()">Cancel</button>
+            </div>
+
+            @if (editError()) {
+              <p class="error" role="alert">{{ editError() }}</p>
             }
-          </select>
-          <button type="button" class="secondary" (click)="edit(task)">Edit</button>
-          <button type="button" class="danger" (click)="remove(task)">Delete</button>
-        </div>
+          </form>
+        } @else {
+          <div class="task-main">
+            <strong>{{ task.title }}</strong>
+            @if (task.description) {
+              <p class="muted">{{ task.description }}</p>
+            }
+            <small class="muted">
+              Due: {{ task.dueDate ? (task.dueDate | date: 'mediumDate') : '—' }}
+            </small>
+          </div>
+          <div class="task-actions">
+            <select
+              [ngModel]="task.status"
+              (ngModelChange)="setStatus(task, $event)"
+              [attr.aria-label]="'Status of ' + task.title"
+            >
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+            <button type="button" class="secondary" (click)="edit(task)">Edit</button>
+            <button type="button" class="danger" (click)="remove(task)">Delete</button>
+          </div>
+        }
       </li>
     }
   </ul>

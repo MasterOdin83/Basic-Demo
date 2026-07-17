@@ -2,12 +2,14 @@ using System.Text;
 using Basic.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Bare 4xx responses stay body-less: rejection details would enable user enumeration.
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(o => o.SuppressMapClientErrors = true);
+builder.Services.AddOpenApi();
 builder.Services.AddBasicData(builder.Configuration.GetConnectionString("Default")!);
 builder.Services.AddCors(o => o.AddPolicy("ui", p => p
     .WithOrigins(builder.Configuration["Cors:UiOrigin"]!.Split(';'))
@@ -30,6 +32,10 @@ await app.Services.InitializeDatabaseAsync();
 app.UseCors("ui");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// API explorer without Postman: /openapi/v1.json + /scalar UI.
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.MapControllers();
 

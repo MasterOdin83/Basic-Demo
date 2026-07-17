@@ -52,9 +52,29 @@
   </section>
 
   <section class="card auth-card">
-    <h2>{{ mode === 'login' ? 'Log in' : 'Create account' }}</h2>
+    @if (auth.username(); as name) {
+      <div class="logged-in">
+        @if (name === 'demo' && !avatarFailed()) {
+          <img
+            class="brand-avatar"
+            src="avatars/leonidas.png"
+            alt=""
+            width="96"
+            height="96"
+            (error)="avatarFailed.set(true)"
+          />
+        } @else {
+          <div class="brand-avatar placeholder" aria-hidden="true">
+            {{ name.charAt(0).toUpperCase() }}
+          </div>
+        }
+        <p class="muted">Logged in as <strong>{{ name }}</strong></p>
+        <a class="cta" routerLink="/tasks">Go to my tasks</a>
+      </div>
+    } @else {
+      <h2>{{ mode() === 'login' ? 'Log in' : 'Create account' }}</h2>
 
-    <form (ngSubmit)="submit()">
+      <form (ngSubmit)="submit()">
       <label>
         Username
         <input name="username" [(ngModel)]="username" autocomplete="username" required />
@@ -65,28 +85,29 @@
           name="password"
           type="password"
           [(ngModel)]="password"
-          [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+          [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
           required
         />
       </label>
 
-      @if (error) {
-        <p class="error" role="alert">{{ error }}</p>
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
       }
-      @if (info) {
-        <p class="info" role="status">{{ info }}</p>
+      @if (info()) {
+        <p class="info" role="status">{{ info() }}</p>
       }
 
-      <button type="submit" [disabled]="busy || !username || !password">
-        {{ mode === 'login' ? 'Log in' : 'Register' }}
+      <button type="submit" [disabled]="busy() || !username || !password">
+        {{ mode() === 'login' ? 'Log in' : 'Register' }}
       </button>
     </form>
 
-    <button type="button" class="link" (click)="toggleMode()">
-      {{ mode === 'login' ? "Don't have an account? Register" : 'Already registered? Log in' }}
-    </button>
+      <button type="button" class="link" (click)="toggleMode()">
+        {{ mode() === 'login' ? "Don't have an account? Register" : 'Already registered? Log in' }}
+      </button>
 
-    <p class="hint">Demo account: <code>demo</code> / <code>Password123!</code></p>
+      <p class="hint">Demo account: <code>demo</code> / <code>Password123!</code></p>
+    }
   </section>
 
   <section class="req-coverage" aria-labelledby="req-title">

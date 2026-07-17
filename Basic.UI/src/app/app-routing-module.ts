@@ -6,7 +6,8 @@ import { Tasks } from './tasks/tasks';
 
 const routes: Routes = [
   { path: 'login', component: Login },
-  { path: '', component: Tasks, canActivate: [authGuard] },
+  { path: 'tasks', component: Tasks, canActivate: [authGuard] },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: '' },
 ];
 

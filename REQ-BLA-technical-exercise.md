@@ -76,7 +76,18 @@ Entregables del candidato:
 
 ---
 
-## Estado de implementación — v0.3 (2026-07-17)
+## Estado de implementación — v0.4 (2026-07-17)
+
+### Cambios v0.4 (2026-07-17)
+- **Bugfix zoneless (raíz del "mensaje de registro nunca aparece"):** la app Angular 21 corre sin zone.js; el estado escrito en callbacks de `subscribe` ahora son signals en `Login` y `Tasks` — sin esto ningún mensaje async (errores de registro/login, "Account created", errores de tareas) se renderizaba.
+- **Rutas con nombre:** `Tasks` vive en `/tasks`; `/` redirige a la landing (`/login`) para que el brand siempre lleve a la página principal; chip "My tasks" activo en el topbar (`routerLinkActive` + `aria-current`); el brand del topbar es link a `/`.
+- **Formulario de tareas en Reactive Forms:** alta y edición son DOS formularios independientes (la edición es inline en la fila y nunca pisa un alta en curso); el botón Add ya no se deshabilita por validación — valida al enviar con error bajo el campo, focus + shake (WAAPI, respeta `prefers-reduced-motion`), título no puede ser solo espacios; descripción ahora es `textarea`.
+- **Status default Pending** pineado con test (`Create_without_status_defaults_to_pending`): el enum tiene `Pending = 0` y la UI preselecciona Pending.
+- **Tarjeta de identidad en la landing (logueado):** en vez del form de login muestra avatar + "Logged in as {usuario}" + CTA a `/tasks`; la cuenta `demo` usa `avatars/leonidas.png` (archivo PENDIENTE de que el usuario lo copie a `Basic.UI/public/avatars/`), el resto un placeholder CSS con la inicial; imagen rota cae al placeholder.
+- **OpenAPI reintroducido (revierte la decisión v0.3):** `Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore` en ambas APIs — `/openapi/v1.json` + UI `/scalar` para explorar/probar endpoints sin Postman; con las versiones actuales el conflicto con el source generator de .NET 10 ya no se reproduce (2 tests de regresión).
+- **Security headers en la SWA** (`staticwebapp.config.json`, la nota era C): `Content-Security-Policy` (todo `'self'`, `connect-src` solo a los dos orígenes QA, `frame-ancestors 'self'`), `X-Frame-Options: SAMEORIGIN`, `Permissions-Policy` negando camera/mic/geo/payment.
+- **Polish UI:** bordes izquierdos por status en las tarjetas de tarea, entrada escalonada de la lista, animación de entrada en mensajes de error/info, focus rings en links del topbar.
+- Tests: **35 backend + 6 UI**, todos verdes.
 
 ### Cambios v0.3 (2026-07-17)
 - UI renombrada a "Ballastlane - .NET - Technical Interview Exercise" (title, topbar, README).
@@ -91,13 +102,13 @@ Entregables del candidato:
 - **BasicSTS.API** (`:5143`): `POST /api/auth/register`, `POST /api/auth/login` (JWT HS256, 8h), `GET /api/auth/me` autorizado — cubre endpoints autorizados y no autorizados.
 - **Basic.API** (`:5216`): CRUD `/api/tasks` con `[Authorize]` + ownership por usuario, `GET /api/tasks/statuses` anónimo, CORS para la UI.
 - **Basic.UI** (Angular 21, `:58906`): login/registro, guard de ruta, interceptor JWT, CRUD de tareas responsive.
-- **Tests (TDD):** 32 backend — servicios con fakes, repositorios con SQLite in-memory, endpoints HTTP reales con `WebApplicationFactory` — más 4 de UI (vitest).
+- **Tests (TDD):** 35 backend — servicios con fakes, repositorios con SQLite in-memory, endpoints HTTP reales con `WebApplicationFactory` — más 6 de UI (vitest).
 - **README** con setup, credenciales seed (`demo` / `Password123!`) y tabla de endpoints.
 
 ### Decisiones
 - SQLite en lugar de "archivo MySQL": MySQL requiere servidor; SQLite es la base de datos de archivo abrible on demand.
 - **Supabase (Postgres) elegido sobre Cosmos DB** para el segundo storage: con EF Core es solo provider Npgsql + connection string, mismos repositorios; Cosmos exigiría una implementación distinta.
-- OpenAPI excluido de ambas APIs (decisión 2026-07-17): las versiones parcheadas de `Microsoft.OpenApi` (CVE GHSA-v5pm-xwqc-g5wc) rompen el source generator de .NET 10; los endpoints quedan documentados en README y archivos `.http`.
+- OpenAPI excluido de ambas APIs (decisión 2026-07-17 mañana): las versiones parcheadas de `Microsoft.OpenApi` (CVE GHSA-v5pm-xwqc-g5wc) rompían el source generator de .NET 10. **Revertida en v0.4 (2026-07-17 tarde) a pedido del usuario:** con `Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore` actuales el conflicto no se reproduce; queda `/scalar` en ambas APIs.
 - `EnsureCreated()` con guard anti-carrera (ambas APIs comparten el archivo SQLite y pueden arrancar a la vez) en lugar de migraciones.
 - Anti user-enumeration (2026-07-17): el registro responde creado o `400` sin cuerpo ni motivo (nunca "username ya existe"); la regla de contraseña se valida en la UI. Aplica a todo diseño futuro.
 

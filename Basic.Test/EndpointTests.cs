@@ -104,6 +104,12 @@ public class StsEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task OpenApi_document_is_served()
+    {
+        (await _client.GetAsync("/openapi/v1.json")).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Register_rejection_reveals_no_reason()
     {
         await _client.PostAsJsonAsync("/api/auth/register", new { username = "carol", password = "password123" });
@@ -166,6 +172,20 @@ public class TasksEndpointTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NoContent, (await _client.DeleteAsync($"/api/tasks/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync($"/api/tasks/{id}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task OpenApi_document_is_served()
+    {
+        (await _client.GetAsync("/openapi/v1.json")).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Create_without_status_defaults_to_pending()
+    {
+        var create = await _client.PostAsJsonAsync("/api/tasks", new { title = "No status sent", description = "", dueDate = (string?)null });
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        Assert.Equal("Pending", (await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("status").GetString());
     }
 
     [Fact]

@@ -1,40 +1,47 @@
-# Handoff — 2026-07-17 (cierre 2)
+# Handoff — 2026-07-17 (cierre 3)
 
 ## Qué se hizo
-- Renombre visible del proyecto a **"Ballastlane - .NET - Technical Interview Exercise"** (`index.html` title, topbar `app.html`, `README.md`, assert de `app.spec.ts`).
-- **Landing para revisores** en la página de login (`Basic.UI/src/app/login/login.html`): tema Ballast Lane (paleta tomada de ballastlane.com/ai-solutions — fondo #0a0a0a, acento #FE5A0B, headline serif con gradiente), tarjetas "how it was built" (stack, arquitectura, TDD, SDLC, GenAI), sección **Requirements coverage** que mapea cada requerimiento del brief V6 a su implementación (el write-up GenAI marcado como pendiente), y hint con credenciales demo.
-- **Animaciones** (filosofía Emil Kowalski, CSS puro en `styles.css`): entrada escalonada solo en la landing (ease-out fuerte `cubic-bezier(0.23,1,0.32,1)`, ≤350ms), `scale(0.97)` en `:active` de botones, hovers dentro de `@media (hover: hover) and (pointer: fine)`, `prefers-reduced-motion` conserva fades y elimina movimiento. La página de tasks NO tiene animación de entrada (se ve con frecuencia, a propósito).
-- **Anti user-enumeration** (pedido explícito de Héctor, aplica a todo diseño futuro): el registro responde `201 Created` o `400` SIN cuerpo ni motivo — `AuthController` ya no expone `ex.Message` y `Program.cs` de BasicSTS usa `SuppressMapClientErrors = true`. La regla de contraseña (≥8) se valida en la UI (`login.ts`). Test de regresión `Register_rejection_reveals_no_reason` en `EndpointTests.cs`. Decisión documentada en REQ v0.3.
-- **Deploy QA**: pull del workflow `master_qa-demo-sts.yml` que Azure generó al crear el App Service del STS y fix para apuntarlo a `BasicSTS.API/BasicSTS.API.csproj` (el genérico `dotnet build` falla en repo multi-proyecto). `environment.prod.ts` con los orígenes reales y esquema `https://` (sin esquema, HttpClient los trata como rutas relativas → 404).
-- REQ actualizado a v0.3; tests: **32 backend (xUnit) + 4 UI (vitest), todos verdes**; build de producción de la UI verificado.
+- **Bugfix raíz "el mensaje de error de registro nunca aparece":** la app Angular 21 es zoneless (no hay zone.js en `package.json`), así que el estado escrito dentro de callbacks de `subscribe` no re-renderizaba. `Login` y `Tasks` ahora usan **signals** para todo estado async (`error`, `info`, `busy`, `tasks`, `editingId`…). Sin este fix ningún mensaje async del app era visible.
+- **Rutas:** `Tasks` movido a `/tasks` (antes ruta vacía); `/` y rutas desconocidas redirigen a la landing `/login`; el brand del topbar es link a `/` (siempre lleva a la página principal) y el chip **"My tasks"** (`routerLinkActive` + `aria-current`) marca dónde estás.
+- **Formulario de tareas → Reactive Forms, alta y edición separadas:** el card "New task" es solo para altas; **Edit abre un editor inline en la propia fila** con su propio `FormGroup` — editar nunca pisa un alta en curso (test `editing a task leaves the add form untouched`). El botón Add **ya no se deshabilita por validación**: valida al enviar, muestra "Title is required." bajo el campo con animación de entrada, focus + shake WAAPI en el campo inválido (respeta `prefers-reduced-motion`); título no puede ser solo espacios; descripción es `textarea`.
+- **Default Pending pineado:** `TaskItemStatus.Pending = 0` ⇒ POST sin `status` crea Pending; test `Create_without_status_defaults_to_pending`.
+- **Landing logueado:** el auth card muestra tarjeta de identidad (avatar + "Logged in as {user}" + CTA "Go to my tasks") en vez del form. La cuenta `demo` usa `avatars/leonidas.png`; **el archivo NO existe aún** — hay que copiarlo a `Basic.UI/public/avatars/leonidas.png` (NUNCA generarlo con IA; el usuario lo vetó). Las demás cuentas (y demo mientras falte el archivo) muestran placeholder CSS con la inicial.
+- **OpenAPI + Scalar reintroducidos** en ambas APIs (`Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore`): documento en `/openapi/v1.json` y explorador en **`/scalar`** para probar endpoints sin Postman. La razón del veto anterior (Microsoft.OpenApi parcheado rompía el source generator de .NET 10) ya no se reproduce con las versiones actuales; 2 tests de regresión lo cubren.
+- **Security headers en la SWA** (`Basic.UI/public/staticwebapp.config.json`, la nota era C): CSP estricta (`'self'` + `connect-src` solo a los 2 orígenes QA + `frame-ancestors 'self'`; `style-src` mantiene `'unsafe-inline'` porque Angular inyecta estilos inline), `X-Frame-Options: SAMEORIGIN`, `Permissions-Policy` negando camera/mic/geolocation/payment. Si cambian los hostnames de las APIs hay que actualizar la CSP.
+- **Polish UI:** bordes izquierdos por status en tarjetas (accent = InProgress, verde = Done), entrada escalonada de la lista (35ms/item, track por id ⇒ solo animan tarjetas nuevas), animación de entrada de mensajes error/info (también en login), focus rings en links del topbar.
+- REQ actualizado a **v0.4**; tests: **35 backend (xUnit) + 6 UI (vitest), todos verdes**; build de producción de la UI verificado.
 
 ## Estado actual
 - Push a `master` dispara TRES workflows: SWA (UI), `master_qa-demo-api.yml` (tasks API → qa-demo-api) y `master_qa-demo-sts.yml` (STS → qa-demo-sts).
-- App Services creados: `qa-demo-sts-h3dxfshgapatdsdf.centralus-01.azurewebsites.net` y `qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net`. UI en SWA `https://thankful-sea-0308a2310.azurestaticapps.net`.
-- `appsettings.QA.json` de ambas APIs ya apunta CORS a la SWA real.
-- Limitación QA conocida: cada App Service tiene su propio SQLite → un usuario registrado en el STS no existe en la DB del tasks API (FK de Tasks.UserId); la cuenta seed `demo`/`Password123!` funciona en ambos porque el seed es idéntico. Supabase lo resuelve.
+- UI en SWA `https://thankful-sea-0308a2310.azurestaticapps.net`; App Services `qa-demo-sts-h3dxfshgapatdsdf` / `qa-demo-api-a3dhdwf0aqdbcnck` (centralus-01).
+- Los 2 workflows de App Service **siguen bloqueados** por el subject OIDC (ver next step 1) — Scalar/OpenAPI no llegarán a QA hasta arreglarlo.
+- Limitación QA conocida: cada App Service tiene su propio SQLite → usuarios registrados en el STS no existen en la DB del tasks API; la cuenta seed `demo`/`Password123!` funciona en ambos. Supabase lo resuelve.
 
 ## Next steps (en orden de prioridad)
-1. **Azure portal — arreglar el login OIDC de los deploys (bloqueante; los 2 workflows de App Service NUNCA han pasado):** fallan en "Login to Azure" con `AADSTS700213` porque GitHub ahora presenta el subject con IDs embebidos y las federated credentials que creó el wizard esperan el formato clásico. Para CADA App Service (`qa-demo-api` y `qa-demo-sts`): encontrar la identidad que usa su Deployment Center (managed identity o app registration en Entra ID) → Federated credentials → editar la credencial del repo y poner como **Subject identifier** exactamente:
+1. **Copiar el avatar:** poner el archivo del usuario en `Basic.UI/public/avatars/leonidas.png` (la UI ya lo referencia; con el archivo presente aparece solo para `demo`). No generarlo con IA.
+2. **Azure portal — arreglar el login OIDC de los deploys (bloqueante; los 2 workflows de App Service NUNCA han pasado):** fallan en "Login to Azure" con `AADSTS700213`. Para CADA App Service (`qa-demo-api` y `qa-demo-sts`): Deployment Center → identidad federada → poner como **Subject identifier** exactamente
    `repo:MasterOdin83@55357287/Basic-Demo@1304366521:ref:refs/heads/master`
-   (si el formulario de tipo "GitHub" no deja escribirlo, usar el tipo "Other" con issuer `https://token.actions.githubusercontent.com` y audience `api://AzureADTokenExchange`). Después: `gh run rerun 29618529817 --failed` y `gh run rerun 29618529775 --failed` (o re-run desde la pestaña Actions).
-2. **Azure portal — App Settings:** en AMBOS App Services agregar `ASPNETCORE_ENVIRONMENT=QA` y `Jwt__Key` (mismo valor en los dos; hoy usan la key dev de `appsettings.json`). Luego smoke test en la SWA: login `demo` → CRUD → logout.
-3. **Pulir UI (hallazgos restantes de la review 2026-07-17):** submits deshabilitados hasta llenar campos (deben validar al enviar), `autocapitalize="none"`+`spellcheck="false"` en username, apóstrofe tipográfico en "Don't", labels "In Progress" para el enum `InProgress`, headings en Title Case, `.task-main` con `min-width:0`+`overflow-wrap:anywhere`, `touch-action: manipulation`. (Hover states y `<title>` ya quedaron hechos.)
-4. **Supabase como segundo storage:** `Npgsql.EntityFrameworkCore.PostgreSQL` en `Basic.Data`, provider por config (`"Database": "sqlite" | "supabase"`), `Basic.Core` intacto.
-5. **Entregable GenAI:** documentar prompts, validación del código generado (tests, review, caso CVE OpenAPI, caso anti-enumeración) y manejo de edge cases/auth.
-6. **Presentación:** guion con user story, capas, demo y decisiones.
+   (si el tipo "GitHub" no lo permite, usar tipo "Other" con issuer `https://token.actions.githubusercontent.com` y audience `api://AzureADTokenExchange`). Después re-run de los workflows fallidos desde Actions.
+3. **Azure portal — App Settings:** en AMBOS App Services `ASPNETCORE_ENVIRONMENT=QA` y `Jwt__Key` (mismo valor en los dos). Smoke test en la SWA: login `demo` → CRUD → logout; verificar `/scalar` en ambas APIs y la nota de securityheaders.com tras el deploy.
+4. **Pulir UI (hallazgos restantes):** `autocapitalize="none"`+`spellcheck="false"` en username, apóstrofe tipográfico en "Don't", labels "In Progress" para `InProgress`, `.task-main` con `min-width:0`+`overflow-wrap:anywhere`, `touch-action: manipulation`. (El hallazgo "submits deshabilitados hasta llenar campos" ya quedó resuelto con la validación al enviar.)
+5. **Supabase como segundo storage:** `Npgsql.EntityFrameworkCore.PostgreSQL` en `Basic.Data`, provider por config (`"Database": "sqlite" | "supabase"`), `Basic.Core` intacto.
+6. **Entregable GenAI:** documentar prompts, validación del código generado (tests, review, caso CVE OpenAPI y su reversión, anti-enumeración, bugfix zoneless) y manejo de edge cases/auth.
+7. **Presentación:** guion con user story, capas, demo y decisiones.
 
 ## Pendientes/backlog acordado
+- Si Scalar no ofrece campo Bearer en su pestaña de auth (no verificado en runtime), declarar el security scheme en el documento OpenAPI de `Basic.API`.
+- Headers de seguridad en los App Services (el scan calificado era el de la SWA); middleware pequeño si se pide.
 - Migraciones EF cuando el esquema evolucione (hoy `EnsureCreated` con guard anti-carrera).
-- JWT key a secret store para despliegue real (hoy dev-only en `appsettings.json`; en QA se sobreescribe como App Setting — ver next step 1).
+- JWT key a secret store para despliegue real (en QA se sobreescribe como App Setting — next step 3).
+- Solo una fila puede estar en edición a la vez (decisión deliberada; mapa de forms por fila si algún día se quiere multi-edición).
 
 ## Cómo retomar
 ```powershell
-dotnet run --project BasicSTS.API   # terminal 1 → http://localhost:5143
-dotnet run --project Basic.API      # terminal 2 → http://localhost:5216
+dotnet run --project BasicSTS.API   # terminal 1 → http://localhost:5143 (/scalar para explorar)
+dotnet run --project Basic.API      # terminal 2 → http://localhost:5216 (/scalar para explorar)
 cd Basic.UI; npm install; npm start # terminal 3 → http://localhost:58906
-dotnet test                         # 32 tests backend
-cd Basic.UI; npm test               # 4 tests UI
+dotnet test                         # 35 tests backend
+cd Basic.UI; npm test               # 6 tests UI
 ```
 - Credenciales seed: `demo` / `Password123!`. Sin secretos externos; la única key es la JWT dev de `appsettings.json` (misma en ambas APIs).
-- Regla de diseño permanente: ninguna respuesta de auth debe revelar el motivo del rechazo (anti user-enumeration).
+- Reglas de diseño permanentes: ninguna respuesta de auth revela el motivo del rechazo (anti user-enumeration); la UI es zoneless — todo estado escrito en callbacks async debe ser signal; nunca generar imágenes con IA para este repo.

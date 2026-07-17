@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
@@ -8,51 +8,53 @@ import { AuthService } from '../auth.service';
   standalone: false,
 })
 export class Login {
-  private auth = inject(AuthService);
+  protected auth = inject(AuthService);
   private router = inject(Router);
 
-  mode: 'login' | 'register' = 'login';
+  // Zoneless app: state written in subscribe callbacks must be signals or it never renders.
+  readonly mode = signal<'login' | 'register'>('login');
+  readonly error = signal('');
+  readonly info = signal('');
+  readonly busy = signal(false);
+  readonly avatarFailed = signal(false);
   username = '';
   password = '';
-  error = '';
-  info = '';
-  busy = false;
 
   toggleMode(): void {
-    this.mode = this.mode === 'login' ? 'register' : 'login';
-    this.error = '';
-    this.info = '';
+    this.mode.set(this.mode() === 'login' ? 'register' : 'login');
+    this.error.set('');
+    this.info.set('');
   }
 
   submit(): void {
-    this.error = '';
-    this.info = '';
+    this.error.set('');
+    this.info.set('');
 
-    if (this.mode === 'register' && this.password.length < 8) {
-      this.error = 'Password must be at least 8 characters.';
+    if (this.mode() === 'register' && this.password.length < 8) {
+      this.error.set('Password must be at least 8 characters.');
       return;
     }
 
-    this.busy = true;
+    this.busy.set(true);
 
-    if (this.mode === 'login') {
+    if (this.mode() === 'login') {
       this.auth.login(this.username, this.password).subscribe({
-        next: () => this.router.navigate(['/']),
+        next: () => this.router.navigate(['/tasks']),
         error: (e) => {
-          this.busy = false;
-          this.error = e.error?.error ?? 'Login failed.';
+          this.busy.set(false);
+          this.error.set(e.error?.error ?? 'Login failed.');
         },
       });
     } else {
       this.auth.register(this.username, this.password).subscribe({
         next: () => {
-          this.busy = false;
-          this.mode = 'login';
-          this.info = 'Account created — you can log in now.';
+          this.busy.set(false);
+          this.mode.set('login');
+          this.info.set('Account created — you can log in now.');
         },
         error: (e) => {
-          this.busy = false;
-          this.error = e.error?.error ?? 'Registration failed.';
+          this.busy.set(false);
+          this.error.set(e.error?.error ?? 'Registration failed.');
         },
       });
     }

@@ -2,5 +2,10 @@
   "navigationFallback": {
     "rewrite": "/index.html",
     "exclude": ["*.{css,js,ico,svg,png,jpg,woff2}"]
+  },
+  "globalHeaders": {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://qa-demo-sts-h3dxfshgapatdsdf.centralus-01.azurewebsites.net https://qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()"
   }
 }
