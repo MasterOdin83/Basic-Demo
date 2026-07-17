@@ -2,5 +2,5 @@
 export const environment = {
   production: true,
   stsUrl: 'https://REPLACE-basic-sts-qa.azurewebsites.net',
-  apiUrl: 'https://REPLACE-basic-api-qa.azurewebsites.net',
+  apiUrl: 'https://qa-demo-api.azurewebsites.net',
 };
