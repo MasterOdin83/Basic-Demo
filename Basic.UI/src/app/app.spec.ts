@@ -1,3 +1,4 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { App } from './app';
@@ -5,12 +6,9 @@ import { App } from './app';
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        RouterModule.forRoot([])
-      ],
-      declarations: [
-        App
-      ],
+      imports: [RouterModule.forRoot([])],
+      declarations: [App],
+      providers: [provideHttpClient()],
     }).compileComponents();
   });
 
@@ -20,10 +18,10 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should render the app title', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, Basic.UI');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Basic Tasks');
   });
 });

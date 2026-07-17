@@ -1,0 +1,35 @@
+<section class="card auth-card">
+  <h2>{{ mode === 'login' ? 'Log in' : 'Create account' }}</h2>
+
+  <form (ngSubmit)="submit()">
+    <label>
+      Username
+      <input name="username" [(ngModel)]="username" autocomplete="username" required />
+    </label>
+    <label>
+      Password
+      <input
+        name="password"
+        type="password"
+        [(ngModel)]="password"
+        [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+        required
+      />
+    </label>
+
+    @if (error) {
+      <p class="error" role="alert">{{ error }}</p>
+    }
+    @if (info) {
+      <p class="info" role="status">{{ info }}</p>
+    }
+
+    <button type="submit" [disabled]="busy || !username || !password">
+      {{ mode === 'login' ? 'Log in' : 'Register' }}
+    </button>
+  </form>
+
+  <button type="button" class="link" (click)="toggleMode()">
+    {{ mode === 'login' ? "Don't have an account? Register" : 'Already registered? Log in' }}
+  </button>
+</section>

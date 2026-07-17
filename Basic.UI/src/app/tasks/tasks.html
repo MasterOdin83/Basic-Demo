@@ -1,0 +1,76 @@
+<section class="card">
+  <h2>{{ form.id === 0 ? 'New task' : 'Edit task' }}</h2>
+
+  <form class="task-form" (ngSubmit)="save()">
+    <label>
+      Title
+      <input name="title" [(ngModel)]="form.title" required maxlength="200" />
+    </label>
+    <label>
+      Description
+      <input name="description" [(ngModel)]="form.description" maxlength="1000" />
+    </label>
+    <label>
+      Due date
+      <input name="dueDate" type="date" [(ngModel)]="form.dueDate" />
+    </label>
+    <label>
+      Status
+      <select name="status" [(ngModel)]="form.status">
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </label>
+
+    <div class="actions">
+      <button type="submit" [disabled]="busy || !form.title.trim()">
+        {{ form.id === 0 ? 'Add task' : 'Save changes' }}
+      </button>
+      @if (form.id !== 0) {
+        <button type="button" class="secondary" (click)="cancel()">Cancel</button>
+      }
+    </div>
+  </form>
+
+  @if (error) {
+    <p class="error" role="alert">{{ error }}</p>
+  }
+</section>
+
+<section class="card">
+  <h2>My tasks ({{ tasks.length }})</h2>
+
+  @if (tasks.length === 0) {
+    <p class="muted">No tasks yet — add your first one above.</p>
+  }
+
+  <ul class="task-list">
+    @for (task of tasks; track task.id) {
+      <li class="task" [class.done]="task.status === 'Done'">
+        <div class="task-main">
+          <strong>{{ task.title }}</strong>
+          @if (task.description) {
+            <p class="muted">{{ task.description }}</p>
+          }
+          <small class="muted">
+            Due: {{ task.dueDate ? (task.dueDate | date: 'mediumDate') : '—' }}
+          </small>
+        </div>
+        <div class="task-actions">
+          <select
+            [ngModel]="task.status"
+            (ngModelChange)="setStatus(task, $event)"
+            [attr.aria-label]="'Status of ' + task.title"
+          >
+            @for (s of statuses; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
+          <button type="button" class="secondary" (click)="edit(task)">Edit</button>
+          <button type="button" class="danger" (click)="remove(task)">Delete</button>
+        </div>
+      </li>
+    }
+  </ul>
+</section>

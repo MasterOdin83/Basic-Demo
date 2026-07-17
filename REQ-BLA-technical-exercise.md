@@ -73,3 +73,28 @@ Entregables del candidato:
 | Functionality | Sin errores ni bugs; deseable: sin warnings en consola del browser |
 | Presentation | Clara, concisa; dominio de best practices backend y frontend |
 | GenAI tools | Fluidez con herramientas GenAI y prompt engineering; pensamiento crítico al evaluar código generado por IA |
+
+---
+
+## Estado de implementación — v0.2 (2026-07-17)
+
+### Entregado
+- **User story:** "Como usuario registrado quiero crear, ver, editar y borrar mis tareas personales (title, description, status, due date) para organizar mi trabajo; solo yo puedo ver y gestionar mis tareas."
+- **Clean Architecture:** `Basic.Core` (entidades + reglas de negocio, cero dependencias) ← `Basic.Data` (EF Core + SQLite, repositorios) ← `Basic.API` / `BasicSTS.API`.
+- **DB:** archivo SQLite `basic-demo.db`, auto-creado y con seed al arrancar cualquiera de las APIs. Tablas `Users` (Id PK, Username único, PasswordHash) y `Tasks` (Id PK, Title, Description, Status, DueDate, UserId FK).
+- **BasicSTS.API** (`:5143`): `POST /api/auth/register`, `POST /api/auth/login` (JWT HS256, 8h), `GET /api/auth/me` autorizado — cubre endpoints autorizados y no autorizados.
+- **Basic.API** (`:5216`): CRUD `/api/tasks` con `[Authorize]` + ownership por usuario, `GET /api/tasks/statuses` anónimo, CORS para la UI.
+- **Basic.UI** (Angular 21, `:58906`): login/registro, guard de ruta, interceptor JWT, CRUD de tareas responsive.
+- **Tests (TDD):** 31 backend — servicios con fakes, repositorios con SQLite in-memory, endpoints HTTP reales con `WebApplicationFactory` — más 4 de UI (vitest).
+- **README** con setup, credenciales seed (`demo` / `Password123!`) y tabla de endpoints.
+
+### Decisiones
+- SQLite en lugar de "archivo MySQL": MySQL requiere servidor; SQLite es la base de datos de archivo abrible on demand.
+- **Supabase (Postgres) elegido sobre Cosmos DB** para el segundo storage: con EF Core es solo provider Npgsql + connection string, mismos repositorios; Cosmos exigiría una implementación distinta.
+- OpenAPI excluido de ambas APIs (decisión 2026-07-17): las versiones parcheadas de `Microsoft.OpenApi` (CVE GHSA-v5pm-xwqc-g5wc) rompen el source generator de .NET 10; los endpoints quedan documentados en README y archivos `.http`.
+- `EnsureCreated()` con guard anti-carrera (ambas APIs comparten el archivo SQLite y pueden arrancar a la vez) en lugar de migraciones.
+
+### Pendiente
+1. Segundo repositorio de datos: Supabase vía `Npgsql.EntityFrameworkCore.PostgreSQL`, selección por config (`"Database": "sqlite" | "supabase"`), sin tocar `Basic.Core`.
+2. Sección GenAI del ejercicio: documentar prompts usados, cómo se validó/corrigió el código generado y manejo de edge cases/auth.
+3. Presentación: guion de user story, arquitectura y demo.

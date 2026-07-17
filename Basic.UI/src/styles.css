@@ -1,1 +1,190 @@
-/* You can add global styles to this file, and also import other style files */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #f4f5f7;
+  color: #1f2430;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #1f2430;
+  color: #fff;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.auth-card {
+  max-width: 380px;
+  margin: 2rem auto 0;
+}
+
+form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.task-form {
+  grid-template-columns: 1fr 1fr;
+}
+
+.task-form label:first-child,
+.task-form label:nth-child(2),
+.task-form .actions {
+  grid-column: 1 / -1;
+}
+
+label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+input,
+select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #c8cdd6;
+  border-radius: 6px;
+  font: inherit;
+  background: #fff;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid #3457d5;
+  outline-offset: 1px;
+}
+
+button {
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: #3457d5;
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #e6e8ee;
+  color: #1f2430;
+}
+
+button.danger {
+  background: #c62839;
+}
+
+button.link {
+  background: none;
+  color: #3457d5;
+  padding: 0.5rem 0;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.task {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e5ea;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.task.done .task-main strong {
+  text-decoration: line-through;
+  color: #7a8194;
+}
+
+.task-main p {
+  margin: 0.25rem 0;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: #7a8194;
+}
+
+.error {
+  color: #c62839;
+  margin: 0.25rem 0 0;
+}
+
+.info {
+  color: #1d7a3d;
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 540px) {
+  .task-form {
+    grid-template-columns: 1fr;
+  }
+
+  .task {
+    flex-direction: column;
+  }
+}

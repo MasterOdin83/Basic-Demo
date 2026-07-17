@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Basic.API/Basic.API.csproj" />
+  <Project Path="Basic.Core/Basic.Core.csproj" />
+  <Project Path="Basic.Data/Basic.Data.csproj" />
   <Project Path="Basic.Test/Basic.Test.csproj" />
   <Project Path="Basic.UI/Basic.UI.esproj">
     <Build />
