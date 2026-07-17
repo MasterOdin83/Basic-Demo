@@ -11,6 +11,7 @@
 
 ## Estado actual
 - Todo compila y corre local: STS en `http://localhost:5143`, tasks API en `http://localhost:5216`, UI en `http://localhost:58906` (puerto fijado en `Basic.UI/angular.json`; el CORS de ambas `appsettings.json` lo refleja).
+- GitHub Actions: workflow de Azure Static Web Apps (generado desde el portal) despliega SOLO la UI en cada push a `master`; la UI desplegada apunta a APIs localhost, así que el sitio publicado es solo estático/demo visual por ahora.
 - DB: `basic-demo.db` en la raíz del repo (gitignored), auto-creada y seeded al arrancar; borrarla y reiniciar la regenera.
 - Credenciales seed: `demo` / `Password123!` (más 3 tareas de ejemplo).
 - Smoke test manual verificado: login → CRUD de tasks → 401 anónimo.
