@@ -1,13 +1,15 @@
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { App } from './app';
+import { Login } from './login/login';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RouterModule.forRoot([])],
-      declarations: [App],
+      imports: [RouterModule.forRoot([]), FormsModule],
+      declarations: [App, Login],
       providers: [provideHttpClient()],
     }).compileComponents();
   });

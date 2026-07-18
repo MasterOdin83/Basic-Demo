@@ -40,9 +40,9 @@ export class Login {
     if (this.mode() === 'login') {
       this.auth.login(this.username, this.password).subscribe({
         next: () => this.router.navigate(['/tasks']),
-        error: (e) => {
+        error: () => {
           this.busy.set(false);
-          this.error.set(e.error?.error ?? 'Login failed.');
+          this.error.set('Login failed. Check your credentials and try again.');
         },
       });
     } else {
@@ -54,7 +54,7 @@ export class Login {
         },
         error: (e) => {
           this.busy.set(false);
-          this.error.set(e.error?.error ?? 'Registration failed.');
+          this.error.set('Registration failed.');
         },
       });
     }

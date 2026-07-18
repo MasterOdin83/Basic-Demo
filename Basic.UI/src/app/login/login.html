@@ -1,80 +1,27 @@
-<div class="login-layout">
-  <section class="hero">
-    <p class="eyebrow">BLA Technical Exercise</p>
-    <h2 class="headline">A small app, <span class="gradient-text">shipped like a real product</span></h2>
-    <p class="lede">
-      A task manager built end to end — versioned requirements, clean architecture, TDD, security
-      review and cloud deployment — to show the process, not just the code.
-    </p>
-
-    <div class="build-facts">
-      <div class="fact">
-        <h3>Stack</h3>
-        <p>
-          Angular 21 front end. Two ASP.NET Core (.NET 10) Web APIs — a token service
-          (register / login / me) and a JWT-protected tasks API — over EF Core + SQLite.
-        </p>
-      </div>
-      <div class="fact">
-        <h3>Architecture</h3>
-        <p>
-          Clean Architecture: a dependency-free core owns the business rules (input validation,
-          per-user task ownership, PBKDF2 password hashing); storage is swappable behind
-          repository interfaces.
-        </p>
-      </div>
-      <div class="fact">
-        <h3>Quality — TDD</h3>
-        <p>
-          35 automated tests: 31 xUnit on the back end (services with fakes, repositories on
-          in-memory SQLite, endpoints via WebApplicationFactory) plus UI tests with Vitest.
-          All green before every merge.
-        </p>
-      </div>
-      <div class="fact">
-        <h3>SDLC</h3>
-        <p>
-          Versioned requirements with acceptance criteria → implementation → code review → QA
-          against the acceptance criteria → OWASP security review → CI/CD with GitHub Actions
-          deploying to Azure (Static Web Apps + App Service).
-        </p>
-      </div>
-      <div class="fact">
-        <h3>Built with GenAI</h3>
-        <p>
-          Pair-built with Claude Code driving a multi-agent pipeline: requirements analyst, UI
-          and API developers, code reviewer, QA tester, OWASP security and DevOps agents. Every
-          generated change is gated by tests and review — including dropping a dependency over
-          an unpatched CVE.
-        </p>
-      </div>
+<section class="card auth-card">
+  @if (auth.username(); as name) {
+    <div class="logged-in">
+      @if (name === 'demo' && !avatarFailed()) {
+        <img
+          class="brand-avatar"
+          src="avatars/leonidas.png"
+          alt=""
+          width="96"
+          height="96"
+          (error)="avatarFailed.set(true)"
+        />
+      } @else {
+        <div class="brand-avatar placeholder" aria-hidden="true">
+          {{ name.charAt(0).toUpperCase() }}
+        </div>
+      }
+      <p class="muted">Logged in as <strong>{{ name }}</strong></p>
+      <a class="cta" routerLink="/tasks">Go to my tasks</a>
     </div>
-  </section>
+  } @else {
+    <h2>{{ mode() === 'login' ? 'Log in' : 'Create account' }}</h2>
 
-  <section class="card auth-card">
-    @if (auth.username(); as name) {
-      <div class="logged-in">
-        @if (name === 'demo' && !avatarFailed()) {
-          <img
-            class="brand-avatar"
-            src="avatars/leonidas.png"
-            alt=""
-            width="96"
-            height="96"
-            (error)="avatarFailed.set(true)"
-          />
-        } @else {
-          <div class="brand-avatar placeholder" aria-hidden="true">
-            {{ name.charAt(0).toUpperCase() }}
-          </div>
-        }
-        <p class="muted">Logged in as <strong>{{ name }}</strong></p>
-        <a class="cta" routerLink="/tasks">Go to my tasks</a>
-      </div>
-    } @else {
-      <h2>{{ mode() === 'login' ? 'Log in' : 'Create account' }}</h2>
-
-      <form (ngSubmit)="submit()">
+    <form (ngSubmit)="submit()">
       <label>
         Username
         <input name="username" [(ngModel)]="username" autocomplete="username" required />
@@ -97,92 +44,15 @@
         <p class="info" role="status">{{ info() }}</p>
       }
 
-      <button type="submit" [disabled]="busy() || !username || !password">
+      <button type="submit" (click)="submit()" [disabled]="busy() || !username || !password">
         {{ mode() === 'login' ? 'Log in' : 'Register' }}
       </button>
     </form>
 
-      <button type="button" class="link" (click)="toggleMode()">
-        {{ mode() === 'login' ? "Don't have an account? Register" : 'Already registered? Log in' }}
-      </button>
+    <button type="button" class="link" (click)="toggleMode()">
+      {{ mode() === 'login' ? "Don't have an account? Register" : 'Already registered? Log in' }}
+    </button>
 
-      <p class="hint">Demo account: <code>demo</code> / <code>Password123!</code></p>
-    }
-  </section>
-
-  <section class="req-coverage" aria-labelledby="req-title">
-    <p class="eyebrow">Exercise brief → implementation</p>
-    <h2 id="req-title" class="req-title">Requirements coverage</h2>
-    <p class="lede">
-      Every requirement from the .NET technical interview brief, mapped to where it lives in this
-      solution.
-    </p>
-
-    <ul class="req-list">
-      <li>
-        <strong>Candidate-authored user story</strong>
-        <span>
-          "As a registered user, I want to create, view, edit and delete my personal tasks (title,
-          description, status, due date) so I can keep track of my work. Only I can see and manage
-          my own tasks."
-        </span>
-      </li>
-      <li>
-        <strong>Database: app table + users table, PK and 2+ fields</strong>
-        <span>
-          SQLite — Tasks (Id PK, Title, Description, Status, DueDate, UserId FK) and Users (Id PK,
-          Username unique, PasswordHash), auto-created and seeded on first run.
-        </span>
-      </li>
-      <li>
-        <strong>Web API with CRUD endpoints</strong>
-        <span>
-          Basic.API — GET / POST / PUT / DELETE on /api/tasks with proper verbs, parameters and
-          status codes.
-        </span>
-      </li>
-      <li>
-        <strong>Second API: create user, login, authorized and anonymous endpoints</strong>
-        <span>
-          BasicSTS.API — POST /api/auth/register, POST /api/auth/login (JWT), GET /api/auth/me
-          [Authorize]; registration replies created-or-not only, so usernames can't be enumerated.
-        </span>
-      </li>
-      <li>
-        <strong>Data access layer</strong>
-        <span>Basic.Data — EF Core + SQLite repositories implementing the core's interfaces.</span>
-      </li>
-      <li>
-        <strong>Independent business logic layer</strong>
-        <span>
-          Basic.Core — zero dependencies; owns validation, per-user ownership and password rules.
-        </span>
-      </li>
-      <li>
-        <strong>Unit tests for all components</strong>
-        <span>
-          31 xUnit tests across data access, business logic and API endpoints, plus 4 Vitest UI
-          tests.
-        </span>
-      </li>
-      <li>
-        <strong>Responsive, user-friendly frontend with full CRUD</strong>
-        <span>
-          Angular 21 — login/register, guarded routes, JWT interceptor, clean component and
-          service structure.
-        </span>
-      </li>
-      <li>
-        <strong>README with setup docs, seed data and credentials</strong>
-        <span>Step-by-step setup, endpoint tables, and a seeded demo account with three tasks.</span>
-      </li>
-      <li class="pending">
-        <strong>GenAI deliverable</strong>
-        <span>
-          The brief's GenAI scenario (a task-management API) is this app itself, pair-built with
-          Claude Code; the prompt and validation write-up is in progress.
-        </span>
-      </li>
-    </ul>
-  </section>
-</div>
+    <p class="hint">Demo account: <code>demo</code> / <code>Password123!</code></p>
+  }
+</section>

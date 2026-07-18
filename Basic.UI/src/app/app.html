@@ -8,9 +8,27 @@
       <span>{{ name }}</span>
       <button type="button" class="secondary" (click)="logout()">Log out</button>
     </div>
+  } @else {
+    <button type="button" (click)="openLogin()">Log in</button>
   }
 </header>
 
 <main class="container">
   <router-outlet />
 </main>
+
+@if (!auth.username()) {
+  <!-- Native <dialog>: focus trap, Esc and backdrop for free. Removed from the DOM
+       once a session exists, which also closes it right after a successful login. -->
+  <dialog
+    #loginDrawer
+    class="login-drawer"
+    aria-label="Log in"
+    (click)="$event.target === loginDrawer && loginDrawer.close()"
+  >
+    <div class="drawer-body">
+      <button type="button" class="link drawer-close" (click)="loginDrawer.close()">Close</button>
+      <app-login />
+    </div>
+  </dialog>
+}

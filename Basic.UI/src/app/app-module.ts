@@ -6,11 +6,12 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { authInterceptor } from './auth.interceptor';
+import { Home } from './home/home';
 import { Login } from './login/login';
 import { Tasks } from './tasks/tasks';
 
 @NgModule({
-  declarations: [App, Login, Tasks],
+  declarations: [App, Home, Login, Tasks],
   imports: [BrowserModule, FormsModule, ReactiveFormsModule, AppRoutingModule],
   providers: [
     provideBrowserGlobalErrorListeners(),
