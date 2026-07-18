@@ -616,6 +616,10 @@ code {
   animation: blur-fade 400ms ease-out 200ms backwards;
 }
 
+.hero .source-line {
+  animation: blur-fade 400ms ease-out 250ms backwards;
+}
+
 .build-facts .fact {
   animation: blur-fade 400ms ease-out backwards;
 }
