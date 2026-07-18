@@ -213,16 +213,22 @@ abbr[title] {
   }
 }
 
+/* Flex, not grid: password managers (LastPass) inject sibling divs into the
+   field; in grid they steal the toggle's column and push it to a new row. */
 .password-field {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
   gap: 0.4rem;
 }
 
-.password-toggle {
+.password-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+button.password-toggle {
   display: grid;
   place-items: center;
-  padding: 0 0.6rem;
+  padding: 0 0.7rem;
   color: var(--muted);
 }
 
