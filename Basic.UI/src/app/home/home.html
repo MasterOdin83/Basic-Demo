@@ -11,8 +11,9 @@
       <div class="fact">
         <h3>Stack</h3>
         <p>
-          Angular 21 front end. Two ASP.NET Core (.NET 10) Web APIs — a token service
-          (register / login / me) and a JWT-protected tasks API — over EF Core + SQLite.
+          Angular 21 front end (zoneless, signals). Two ASP.NET Core (.NET 10) Web APIs — a
+          token service (register / login / me) and a JWT-protected tasks API — over EF Core +
+          SQLite, each self-documenting with OpenAPI + Scalar.
         </p>
       </div>
       <div class="fact">
@@ -26,8 +27,8 @@
       <div class="fact">
         <h3>Quality — TDD</h3>
         <p>
-          35 automated tests: 31 xUnit on the back end (services with fakes, repositories on
-          in-memory SQLite, endpoints via WebApplicationFactory) plus UI tests with Vitest.
+          38 automated tests: 32 xUnit on the back end (services with fakes, repositories on
+          in-memory SQLite, endpoints via WebApplicationFactory) plus 6 Vitest UI tests.
           All green before every merge.
         </p>
       </div>
@@ -53,8 +54,8 @@
         <p>
           Pair-built with Claude Code driving a multi-agent pipeline: requirements analyst, UI
           and API developers, code reviewer, QA tester, OWASP security and DevOps agents. Every
-          generated change is gated by tests and review — including dropping a dependency over
-          an unpatched CVE.
+          generated change is gated by tests and review — including temporarily dropping a
+          dependency over an unpatched CVE and restoring it once a safe version shipped.
         </p>
       </div>
     </div>
@@ -88,7 +89,7 @@
         <strong>Web API with CRUD endpoints</strong>
         <span>
           Basic.API — GET / POST / PUT / DELETE on /api/tasks with proper verbs, parameters and
-          status codes.
+          status codes; OpenAPI docs served via Scalar.
         </span>
       </li>
       <li>
@@ -111,15 +112,15 @@
       <li>
         <strong>Unit tests for all components</strong>
         <span>
-          31 xUnit tests across data access, business logic and API endpoints, plus 4 Vitest UI
+          32 xUnit tests across data access, business logic and API endpoints, plus 6 Vitest UI
           tests.
         </span>
       </li>
       <li>
         <strong>Responsive, user-friendly frontend with full CRUD</strong>
         <span>
-          Angular 21 — login/register, guarded routes, JWT interceptor, clean component and
-          service structure.
+          Angular 21 — landing page with slide-in login/register drawer, guarded routes, JWT
+          interceptor, inline task editing, clean component and service structure.
         </span>
       </li>
       <li>
