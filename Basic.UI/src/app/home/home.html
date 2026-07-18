@@ -3,59 +3,95 @@
     <p class="eyebrow">Ballastlane - Technical Exercise</p>
     <h2 class="headline">A small app, <span class="gradient-text">shipped like a real product</span></h2>
     <p class="lede">
-      A task manager built end to end — versioned requirements, clean architecture, TDD, security
-      review and cloud deployment — to show the process, not just the code.
+      A task manager built end to end — versioned requirements, clean architecture,
+      <abbr title="Test-Driven Development — tests are written first, then the code that makes them pass">TDD</abbr>,
+      security review and cloud deployment — to show the process, not just the code.
+    </p>
+    <p class="source-line">
+      <a href="https://github.com/MasterOdin83/Basic-Demo" target="_blank" rel="noopener noreferrer">
+        View the source on GitHub ↗
+      </a>
     </p>
 
     <div class="build-facts">
       <div class="fact">
         <h3>Stack</h3>
         <p>
-          Angular 21 front end (zoneless, signals). Two ASP.NET Core (.NET 10) Web APIs — a
-          token service (register / login / me) and a JWT-protected tasks API — over EF Core +
-          SQLite, each self-documenting with OpenAPI + Scalar.
+          Angular 21 front end (zoneless, signals). Two ASP.NET Core (.NET 10) Web
+          <abbr title="Application Programming Interface — how programs talk to each other">APIs</abbr>
+          — a token service (register / login / me) and a
+          <abbr title="JSON Web Token — a signed token that proves who you are to the API">JWT</abbr>-protected
+          tasks API — over
+          <abbr title="Entity Framework Core — Microsoft's object-relational mapper for .NET">EF Core</abbr> +
+          SQLite, each self-documenting with OpenAPI + Scalar (<a
+            href="https://qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net/scalar/v1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >tasks API docs ↗</a> ·
+          <a
+            href="https://qa-demo-sts-h3dxfshgapatdsdf.centralus-01.azurewebsites.net/scalar/v1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >auth API docs ↗</a>).
         </p>
       </div>
       <div class="fact">
         <h3>Architecture</h3>
         <p>
           Clean Architecture: a dependency-free core owns the business rules (input validation,
-          per-user task ownership, PBKDF2 password hashing); storage is swappable behind
-          repository interfaces.
+          per-user task ownership,
+          <abbr title="Password-Based Key Derivation Function 2 — a slow, salted hash that makes stolen passwords hard to crack">PBKDF2</abbr>
+          password hashing); storage is swappable behind repository interfaces.
         </p>
       </div>
       <div class="fact">
-        <h3>Quality — TDD</h3>
+        <h3>Quality — <abbr title="Test-Driven Development — tests are written first, then the code that makes them pass">TDD</abbr></h3>
         <p>
           38 automated tests: 32 xUnit on the back end (services with fakes, repositories on
-          in-memory SQLite, endpoints via WebApplicationFactory) plus 6 Vitest UI tests.
-          All green before every merge.
+          in-memory SQLite, endpoints via WebApplicationFactory) plus 6 Vitest
+          <abbr title="User Interface">UI</abbr> tests. All green before every merge.
         </p>
       </div>
       <div class="fact">
-        <h3>SDLC</h3>
+        <h3><abbr title="Software Development Life Cycle — the full process from requirements to deployment">SDLC</abbr></h3>
         <p>
-          Versioned requirements with acceptance criteria → implementation → code review → QA
-          against the acceptance criteria → OWASP security review → CI/CD with GitHub Actions
-          deploying to Azure (Static Web Apps + App Service).
+          Versioned requirements with acceptance criteria → implementation → code review →
+          <abbr title="Quality Assurance">QA</abbr> against the acceptance criteria →
+          <abbr title="Open Worldwide Application Security Project — the nonprofit behind the Top 10 list of web security risks">OWASP</abbr>
+          security review →
+          <abbr title="Continuous Integration / Continuous Deployment — every change is automatically built, tested and released">CI/CD</abbr>
+          with GitHub Actions deploying to Azure (Static Web Apps + App Service).
         </p>
       </div>
       <div class="fact">
         <h3>Security</h3>
         <p>
-          Baked into the SDLC, not bolted on: every input is validated server-side against
-          parameter tampering, the tasks API requires JWT bearer tokens with per-user ownership
-          checks, registration never reveals whether a username exists, and the deployed site
-          serves hardened security headers rated A+.
+          Baked into the
+          <abbr title="Software Development Life Cycle — the full process from requirements to deployment">SDLC</abbr>,
+          not bolted on: every input is validated server-side against parameter tampering, the
+          tasks API requires
+          <abbr title="JSON Web Token — a signed token that proves who you are to the API">JWT</abbr>
+          bearer tokens with per-user ownership checks, registration never reveals whether a
+          username exists, and the deployed site serves hardened
+          <a
+            href="https://securityheaders.com/?q=https%3A%2F%2Fthankful-sea-0308a2310.7.azurestaticapps.net%2F&amp;followRedirects=on"
+            target="_blank"
+            rel="noopener noreferrer"
+          >security headers rated A+ ↗</a>.
         </p>
       </div>
       <div class="fact">
-        <h3>Built with GenAI</h3>
+        <h3>Built with <abbr title="Generative Artificial Intelligence">GenAI</abbr></h3>
         <p>
-          Pair-built with Claude Code driving a multi-agent pipeline: requirements analyst, UI
-          and API developers, code reviewer, QA tester, OWASP security and DevOps agents. Every
-          generated change is gated by tests and review — including temporarily dropping a
-          dependency over an unpatched CVE and restoring it once a safe version shipped.
+          Pair-built with Claude Code driving a multi-agent pipeline: requirements analyst,
+          <abbr title="User Interface">UI</abbr> and
+          <abbr title="Application Programming Interface — how programs talk to each other">API</abbr>
+          developers, code reviewer, <abbr title="Quality Assurance">QA</abbr> tester,
+          <abbr title="Open Worldwide Application Security Project — the nonprofit behind the Top 10 list of web security risks">OWASP</abbr>
+          security and DevOps agents. Every generated change is gated by tests and review —
+          including temporarily dropping a dependency over an unpatched
+          <abbr title="Common Vulnerabilities and Exposures — a publicly catalogued security flaw">CVE</abbr>
+          and restoring it once a safe version shipped.
         </p>
       </div>
     </div>
@@ -79,29 +115,51 @@
         </span>
       </li>
       <li>
-        <strong>Database: app table + users table, PK and 2+ fields</strong>
+        <strong>
+          Database: app table + users table,
+          <abbr title="Primary Key — uniquely identifies each row in a table">PK</abbr> and 2+ fields
+        </strong>
         <span>
-          SQLite — Tasks (Id PK, Title, Description, Status, DueDate, UserId FK) and Users (Id PK,
-          Username unique, PasswordHash), auto-created and seeded on first run.
+          SQLite — Tasks (Id <abbr title="Primary Key — uniquely identifies each row in a table">PK</abbr>,
+          Title, Description, Status, DueDate, UserId
+          <abbr title="Foreign Key — references a row in another table">FK</abbr>) and Users (Id
+          <abbr title="Primary Key — uniquely identifies each row in a table">PK</abbr>, Username unique,
+          PasswordHash), auto-created and seeded on first run.
         </span>
       </li>
       <li>
-        <strong>Web API with CRUD endpoints</strong>
+        <strong>
+          Web <abbr title="Application Programming Interface — how programs talk to each other">API</abbr>
+          with <abbr title="Create, Read, Update, Delete — the four basic data operations">CRUD</abbr>
+          endpoints
+        </strong>
         <span>
           Basic.API — GET / POST / PUT / DELETE on /api/tasks with proper verbs, parameters and
-          status codes; OpenAPI docs served via Scalar.
+          status codes;
+          <a
+            href="https://qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net/scalar/v1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >OpenAPI docs served via Scalar ↗</a>.
         </span>
       </li>
       <li>
         <strong>Second API: create user, login, authorized and anonymous endpoints</strong>
         <span>
-          BasicSTS.API — POST /api/auth/register, POST /api/auth/login (JWT), GET /api/auth/me
-          [Authorize]; registration replies created-or-not only, so usernames can't be enumerated.
+          Basic<abbr title="Security Token Service — the API that issues login tokens">STS</abbr>.API
+          — POST /api/auth/register, POST /api/auth/login
+          (<abbr title="JSON Web Token — a signed token that proves who you are to the API">JWT</abbr>),
+          GET /api/auth/me [Authorize]; registration replies created-or-not only, so usernames
+          can't be enumerated.
         </span>
       </li>
       <li>
         <strong>Data access layer</strong>
-        <span>Basic.Data — EF Core + SQLite repositories implementing the core's interfaces.</span>
+        <span>
+          Basic.Data —
+          <abbr title="Entity Framework Core — Microsoft's object-relational mapper for .NET">EF Core</abbr>
+          + SQLite repositories implementing the core's interfaces.
+        </span>
       </li>
       <li>
         <strong>Independent business logic layer</strong>
@@ -112,14 +170,18 @@
       <li>
         <strong>Unit tests for all components</strong>
         <span>
-          32 xUnit tests across data access, business logic and API endpoints, plus 6 Vitest UI
-          tests.
+          32 xUnit tests across data access, business logic and API endpoints, plus 6 Vitest
+          <abbr title="User Interface">UI</abbr> tests.
         </span>
       </li>
       <li>
-        <strong>Responsive, user-friendly frontend with full CRUD</strong>
+        <strong>
+          Responsive, user-friendly frontend with full
+          <abbr title="Create, Read, Update, Delete — the four basic data operations">CRUD</abbr>
+        </strong>
         <span>
-          Angular 21 — landing page with slide-in login/register drawer, guarded routes, JWT
+          Angular 21 — landing page with slide-in login/register drawer, guarded routes,
+          <abbr title="JSON Web Token — a signed token that proves who you are to the API">JWT</abbr>
           interceptor, inline task editing, clean component and service structure.
         </span>
       </li>
@@ -128,10 +190,11 @@
         <span>Step-by-step setup, endpoint tables, and a seeded demo account with three tasks.</span>
       </li>
       <li class="pending">
-        <strong>GenAI deliverable</strong>
+        <strong><abbr title="Generative Artificial Intelligence">GenAI</abbr> deliverable</strong>
         <span>
-          The brief's GenAI scenario (a task-management API) is this app itself, pair-built with
-          Claude Code; the prompt and validation write-up is in progress.
+          The brief's <abbr title="Generative Artificial Intelligence">GenAI</abbr> scenario (a
+          task-management API) is this app itself, pair-built with Claude Code; the prompt and
+          validation write-up is in progress.
         </span>
       </li>
     </ul>
