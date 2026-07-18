@@ -447,6 +447,7 @@ code {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  min-width: 50%;
 }
 
 .muted {

@@ -89,9 +89,7 @@
         } @else {
         <div class="task-main">
           <strong>{{ task.title }}</strong>
-          @if (task.description) {
           <p class="muted">{{ task.description }}</p>
-          }
           <small class="muted">
             Due: {{ task.dueDate ? (task.dueDate | date: 'mediumDate') : '—' }}
           </small>
