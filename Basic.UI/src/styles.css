@@ -207,6 +207,25 @@ abbr[title] {
   width: 45%;
 }
 
+@media (max-width: 900px) {
+  .card-task {
+    width: auto;
+  }
+}
+
+.password-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+}
+
+.password-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0 0.6rem;
+  color: var(--muted);
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -613,7 +632,8 @@ code {
   inset: 0 0 0 auto;
   margin: 0;
   width: min(420px, 90vw);
-  height: 100%;
+  /* inset pins top+bottom; height:auto avoids the iOS toolbar gap 100% causes */
+  height: auto;
   max-width: none;
   max-height: none;
   padding: 0;
@@ -688,6 +708,12 @@ code {
 
   .task {
     flex-direction: column;
+  }
+
+  /* Login drawer covers the whole screen on phones */
+  .login-drawer {
+    width: 100%;
+    border-left: none;
   }
 }
 

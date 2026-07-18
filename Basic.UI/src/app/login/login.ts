@@ -17,6 +17,7 @@ export class Login {
   readonly info = signal('');
   readonly busy = signal(false);
   readonly avatarFailed = signal(false);
+  readonly showPassword = signal(false);
   username = '';
   password = '';
 
