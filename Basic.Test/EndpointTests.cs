@@ -33,7 +33,7 @@ internal static class TestApp
         return (factory, connection);
     }
 
-    public static string TokenFor(int userId, string username) =>
+    public static string TokenFor(int userId, string username, DateTime? expires = null) =>
         new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
             Issuer = "BasicSTS",
@@ -43,7 +43,8 @@ internal static class TestApp
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Name, username)
             ]),
-            Expires = DateTime.UtcNow.AddMinutes(30),
+            NotBefore = expires?.AddMinutes(-5),
+            Expires = expires ?? DateTime.UtcNow.AddMinutes(30),
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey)), SecurityAlgorithms.HmacSha256)
         });
@@ -110,6 +111,33 @@ public class StsEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task Refresh_issues_working_token_and_rejects_wrong_token_types()
+    {
+        await _client.PostAsJsonAsync("/api/auth/register", new { username = "dave", password = "password123" });
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new { username = "dave", password = "password123" });
+        var session = await login.Content.ReadFromJsonAsync<JsonElement>();
+        var refreshToken = session.GetProperty("refreshToken").GetString();
+
+        var refresh = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken });
+        refresh.EnsureSuccessStatusCode();
+        var newToken = (await refresh.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString();
+
+        var me = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
+        me.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
+        var meResponse = await _client.SendAsync(me);
+        meResponse.EnsureSuccessStatusCode();
+        Assert.Equal("dave", (await meResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("username").GetString());
+
+        // Audiences differ: an access token is no refresh token, and a refresh token is no bearer token.
+        var misuse = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = session.GetProperty("token").GetString() });
+        Assert.Equal(HttpStatusCode.Unauthorized, misuse.StatusCode);
+
+        var bearerMisuse = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
+        bearerMisuse.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _client.SendAsync(bearerMisuse)).StatusCode);
+    }
+
+    [Fact]
     public async Task Register_rejection_reveals_no_reason()
     {
         await _client.PostAsJsonAsync("/api/auth/register", new { username = "carol", password = "password123" });
@@ -150,6 +178,17 @@ public class TasksEndpointTests : IDisposable
         var statuses = await anonymous.GetFromJsonAsync<string[]>("/api/tasks/statuses");
         Assert.NotNull(statuses);
         Assert.Equal(["Pending", "InProgress", "Done"], statuses);
+    }
+
+    [Fact]
+    public async Task Expired_token_is_unauthorized()
+    {
+        // Guards ClockSkew = Zero: with the default 5-min skew this token would still pass.
+        using var expired = _factory.CreateClient();
+        expired.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", TestApp.TokenFor(1, "demo", DateTime.UtcNow.AddMinutes(-1)));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await expired.GetAsync("/api/tasks")).StatusCode);
     }
 
     [Fact]

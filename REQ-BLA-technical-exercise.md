@@ -76,7 +76,13 @@ Entregables del candidato:
 
 ---
 
-## Estado de implementación — v0.4 (2026-07-17)
+## Estado de implementación — v0.5 (2026-07-19)
+
+### Cambios v0.5 (2026-07-19)
+- **Refresh tokens (pedido del usuario: "expirado no desloguea ni refresca"):** el login del STS ahora emite access token de **3 minutos** (`Jwt:AccessTokenMinutes`, valor demo) + refresh token JWT stateless de **1 día** (`Jwt:RefreshTokenDays`, expiración absoluta, sin rotación/revocación — comentado como decisión deliberada). Nuevo `POST /api/auth/refresh`. El refresh token lleva audience propia (`BasicApp.refresh`), así las APIs de recursos lo rechazan como bearer y el access token no sirve para refrescar (testeado en ambas direcciones). `ClockSkew = Zero` en ambas APIs: el skew default de 5 min mantenía vivo un token de 3 min durante 8. El interceptor Angular ante un 401 refresca una vez y reintenta el request; si el refresh falla (día vencido o sin refresh token) limpia sesión y navega a login — criterio de aceptación: expirado ⇒ refresca en silencio o desloguea, nunca queda colgado.
+- **Header móvil (≤700px):** brand reducido a "Ballastlane" solo (`.brand-tail` oculto) y menú hamburguesa (`.nav-group` con `display: contents` en desktop — layout intacto — y dropdown toggled por signal `menuOpen` en móvil) con My tasks, usuario y Log out.
+- **Tasks en móvil (≤900px):** las dos columnas (`.tasks` flex) se apilan en vertical — el layout lado a lado del fix desktop recortaba la columna New task en pantallas angostas.
+- Tests: **37 backend + 6 UI**, todos verdes (nuevos: flujo refresh end-to-end, mal uso de tipos de token en ambas direcciones, token expirado ⇒ 401 exacto).
 
 ### Cambios v0.4 (2026-07-17)
 - **Bugfix zoneless (raíz del "mensaje de registro nunca aparece"):** la app Angular 21 corre sin zone.js; el estado escrito en callbacks de `subscribe` ahora son signals en `Login` y `Tasks` — sin esto ningún mensaje async (errores de registro/login, "Account created", errores de tareas) se renderizaba.
@@ -99,7 +105,7 @@ Entregables del candidato:
 - **User story:** "Como usuario registrado quiero crear, ver, editar y borrar mis tareas personales (title, description, status, due date) para organizar mi trabajo; solo yo puedo ver y gestionar mis tareas."
 - **Clean Architecture:** `Basic.Core` (entidades + reglas de negocio, cero dependencias) ← `Basic.Data` (EF Core + SQLite, repositorios) ← `Basic.API` / `BasicSTS.API`.
 - **DB:** archivo SQLite `basic-demo.db`, auto-creado y con seed al arrancar cualquiera de las APIs. Tablas `Users` (Id PK, Username único, PasswordHash) y `Tasks` (Id PK, Title, Description, Status, DueDate, UserId FK).
-- **BasicSTS.API** (`:5143`): `POST /api/auth/register`, `POST /api/auth/login` (JWT HS256, 8h), `GET /api/auth/me` autorizado — cubre endpoints autorizados y no autorizados.
+- **BasicSTS.API** (`:5143`): `POST /api/auth/register`, `POST /api/auth/login` (JWT HS256: access 3 min + refresh 1 día desde v0.5), `POST /api/auth/refresh`, `GET /api/auth/me` autorizado — cubre endpoints autorizados y no autorizados.
 - **Basic.API** (`:5216`): CRUD `/api/tasks` con `[Authorize]` + ownership por usuario, `GET /api/tasks/statuses` anónimo, CORS para la UI.
 - **Basic.UI** (Angular 21, `:58906`): login/registro, guard de ruta, interceptor JWT, CRUD de tareas responsive.
 - **Tests (TDD):** 35 backend — servicios con fakes, repositorios con SQLite in-memory, endpoints HTTP reales con `WebApplicationFactory` — más 6 de UI (vitest).

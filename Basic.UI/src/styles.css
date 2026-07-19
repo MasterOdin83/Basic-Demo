@@ -72,6 +72,15 @@ h3 {
   margin-left: auto;
 }
 
+/* Desktop: wrapper is layout-transparent so nav keeps its margin-left:auto slot */
+.nav-group {
+  display: contents;
+}
+
+.menu-toggle {
+  display: none;
+}
+
 .topbar .nav a {
   color: var(--muted);
   text-decoration: none;
@@ -208,8 +217,58 @@ abbr[title] {
 }
 
 @media (max-width: 900px) {
+  /* Side-by-side columns don't fit; stack New task above the list */
+  .tasks {
+    flex-direction: column;
+  }
+
   .card-task {
     width: auto;
+  }
+}
+
+/* Mobile header: brand name alone + hamburger dropdown with nav, user and logout */
+@media (max-width: 700px) {
+  .brand-tail {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: block;
+    margin-left: auto;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .topbar {
+    position: relative;
+  }
+
+  .nav-group {
+    display: none;
+  }
+
+  .nav-group.open {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: start;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 1rem 1.25rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-group.open .nav {
+    margin-left: 0;
+  }
+
+  .nav-group.open .user {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

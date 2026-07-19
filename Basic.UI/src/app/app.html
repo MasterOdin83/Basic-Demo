@@ -1,12 +1,22 @@
 <header class="topbar">
-  <h1><a routerLink="/">Ballastlane - .NET - Technical Interview Exercise</a></h1>
+  <h1><a routerLink="/">Ballastlane<span class="brand-tail"> - .NET - Technical Interview Exercise</span></a></h1>
   @if (auth.username(); as name) {
-    <nav class="nav" aria-label="Primary">
-      <a routerLink="/tasks" routerLinkActive="active" ariaCurrentWhenActive="page">My tasks</a>
-    </nav>
-    <div class="user">
-      <span>{{ name }}</span>
-      <button type="button" class="secondary" (click)="logout()">Log out</button>
+    <button
+      type="button"
+      class="secondary menu-toggle"
+      aria-label="Menu"
+      aria-controls="site-menu"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(!menuOpen())"
+    >☰</button>
+    <div id="site-menu" class="nav-group" [class.open]="menuOpen()">
+      <nav class="nav" aria-label="Primary">
+        <a routerLink="/tasks" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="menuOpen.set(false)">My tasks</a>
+      </nav>
+      <div class="user">
+        <span>{{ name }}</span>
+        <button type="button" class="secondary" (click)="logout()">Log out</button>
+      </div>
     </div>
   } @else {
     <button type="button" (click)="openLogin()">Log in</button>

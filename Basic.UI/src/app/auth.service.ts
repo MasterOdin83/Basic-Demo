@@ -14,10 +14,14 @@ export class AuthService {
 
   login(username: string, password: string) {
     return this.http
-      .post<{ token: string; username: string }>(`${STS_URL}/api/auth/login`, { username, password })
+      .post<{ token: string; refreshToken: string; username: string }>(
+        `${STS_URL}/api/auth/login`,
+        { username, password },
+      )
       .pipe(
         tap((r) => {
           localStorage.setItem('token', r.token);
+          localStorage.setItem('refreshToken', r.refreshToken);
           localStorage.setItem('username', r.username);
           this.username.set(r.username);
         }),
@@ -28,8 +32,16 @@ export class AuthService {
     return this.http.post(`${STS_URL}/api/auth/register`, { username, password });
   }
 
+  refresh() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    return this.http
+      .post<{ token: string }>(`${STS_URL}/api/auth/refresh`, { refreshToken })
+      .pipe(tap((r) => localStorage.setItem('token', r.token)));
+  }
+
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('username');
     this.username.set(null);
   }

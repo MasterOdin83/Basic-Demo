@@ -21,7 +21,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+        // Default 5-min skew would keep a 3-min demo token alive for 8; expiry must be exact.
+        ClockSkew = TimeSpan.Zero
     });
 builder.Services.AddAuthorization();
 
