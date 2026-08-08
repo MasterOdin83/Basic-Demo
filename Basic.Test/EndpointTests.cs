@@ -8,6 +8,7 @@ using Basic.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -29,6 +30,9 @@ internal static class TestApp
             {
                 services.RemoveAll<DbContextOptions<AppDbContext>>();
                 services.AddDbContext<AppDbContext>(o => o.UseSqlite(connection));
+                // Fakes Redis for tests: same IDistributedCache contract, no real server needed.
+                services.RemoveAll<IDistributedCache>();
+                services.AddDistributedMemoryCache();
             }));
         return (factory, connection);
     }
@@ -88,6 +92,22 @@ public class StsEndpointTests : IDisposable
         var me = await _client.SendAsync(request);
         me.EnsureSuccessStatusCode();
         Assert.Equal("alice", (await me.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("username").GetString());
+    }
+
+    [Fact]
+    public async Task Login_sets_session_cookie_and_omits_tokens_from_body()
+    {
+        await _client.PostAsJsonAsync("/api/auth/register", new { username = "erin", password = "password123" });
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new { username = "erin", password = "password123" });
+        login.EnsureSuccessStatusCode();
+
+        Assert.True(login.Headers.TryGetValues("Set-Cookie", out var cookies));
+        Assert.Contains(cookies!, c => c.StartsWith("session=") && c.Contains("HttpOnly"));
+
+        var body = await login.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(body.TryGetProperty("token", out _));
+        Assert.False(body.TryGetProperty("refreshToken", out _));
+        Assert.Equal("erin", body.GetProperty("username").GetString());
     }
 
     [Fact]

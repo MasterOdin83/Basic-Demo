@@ -76,6 +76,17 @@ Entregables del candidato:
 
 ---
 
+## Estado de implementación — v0.6 (2026-08-08, sin commitear)
+
+### Cambios v0.6 (2026-08-08) — sesión EPAM showcase, hard-stop por contexto lleno
+- Ver `HANDOFF.md` (raíz del repo) para el detalle completo — esta entrada es el resumen corto.
+- Rebrand Ballastlane → EPAM en toda la UI; About con bio real y link a Spartan IT (env-aware, local/prod).
+- Requirements coverage migrado a MD-driven (`public/requirements-coverage.md`, parser propio sin deps) — verificado línea por línea contra este mismo documento, se agregó "Presentation & code review" que faltaba.
+- Animación: aura de fondo, glassmorphism, scroll-reveal, spotlight de cursor, splash con parallax. Paleta cyan/violeta reemplazó el naranja original.
+- Dos bugs de headline (palabras pegadas, luego cada palabra en su línea) — revertido a texto plano tras el segundo fallo en vez de un tercer intento a ciegas (regla de máx. 2 reintentos, ver `AGENT-OPERATING-NOTES.md`).
+- Pendiente sin confirmar al momento del corte: páginas de detalle por fact-card y chart de economía de tokens (pedidos, no verificados).
+- Nada de esto está commiteado.
+
 ## Estado de implementación — v0.5 (2026-07-19)
 
 ### Cambios v0.5 (2026-07-19)

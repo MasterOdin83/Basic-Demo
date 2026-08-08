@@ -3,4 +3,5 @@ export const environment = {
   production: true,
   stsUrl: 'https://qa-demo-sts-h3dxfshgapatdsdf.centralus-01.azurewebsites.net',
   apiUrl: 'https://qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net',
+  spartanItAboutUrl: 'https://proud-coast-051f45010.7.azurestaticapps.net/en/about',
 };
