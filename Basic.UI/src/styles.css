@@ -6,15 +6,17 @@
   --border: #2e2622;
   --text: #fafaf9;
   --muted: #a8a29e;
-  --accent: #22d3ee;
-  --accent-hover: #67e8f9;
-  /* Recomputed for contrast against the new cyan accent: ~10.4:1, well past the 4.5:1 AA floor. */
-  --accent-ink: #04141a;
-  --gradient: linear-gradient(90deg, #22d3ee, #7c3aed);
+  /* SOC/alert-console palette: amber is the one primary neon, cyan demoted to a
+     secondary/cool accent so it never fights --danger's red for attention. */
+  --accent: #ffb020;
+  --accent-hover: #ffc857;
+  --accent-ink: #1a1200;
+  --accent-secondary: #64748b;
+  --gradient: linear-gradient(90deg, var(--accent), var(--accent-secondary));
   --danger: #dc2626;
   --danger-text: #f87171;
   --success-text: #4ade80;
-  --font-display: Georgia, 'Times New Roman', serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -81,36 +83,89 @@ h3 {
   margin-left: auto;
 }
 
-/* Desktop: wrapper is layout-transparent so nav keeps its margin-left:auto slot */
+/* Desktop: wrapper is layout-transparent so nav keeps its margin-left:auto slot.
+   Mobile hides this copy entirely (see media query below) — the .drawer has its
+   own separate copy of the nav markup in app.html, not shared with this one. */
 .nav-group {
   display: contents;
 }
 
-.menu-toggle {
+.topbar .menu-toggle {
   display: none;
 }
 
+/* Underline "current tab" indicator, not a filled pill — a nav link shouldn't
+   read as a CTA button. Buttons (Log in/out) keep the pill treatment; this is
+   the one place in the topbar that's navigation rather than an action. */
 .topbar .nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--muted);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  padding: 0.3rem 0.1rem;
+  border-bottom: 2px solid transparent;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.topbar .nav a:hover {
+  color: var(--text);
 }
 
 .topbar .nav a.active {
   color: var(--accent);
-  background: var(--surface-2);
-  border-color: var(--border);
+  border-bottom-color: var(--accent);
 }
 
 .user {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Identity badge — plain muted text didn't read as "this is your account."
+   The icon + pill + full-brightness text give it presence without being loud. */
+.userBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.userBadge .userIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.topbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Mobile: inline nav-group is hidden (see .nav-group above), hamburger opens
+   the .drawer version of the same menu content instead. */
+@media (max-width: 1100px) {
+  .nav-group {
+    display: none;
+  }
+
+  .topbar .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
 }
 
 .container {
@@ -140,11 +195,9 @@ h3 {
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(
-    circle 280px at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    color-mix(in srgb, var(--accent) 16%, transparent),
-    transparent 70%
-  );
+  background: radial-gradient(circle 280px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      transparent 70%);
   transition: opacity 400ms ease;
 }
 
@@ -187,7 +240,7 @@ h3 {
   right: -60px;
   width: 380px;
   height: 380px;
-  background: radial-gradient(circle, #7c3aed, transparent 70%);
+  background: radial-gradient(circle, var(--accent-secondary), transparent 70%);
   animation: blob-drift-b 16s ease-in-out infinite alternate;
 }
 
@@ -204,6 +257,7 @@ h3 {
   from {
     transform: translate(0, 0) scale(1);
   }
+
   to {
     transform: translate(30px, 25px) scale(1.08);
   }
@@ -213,6 +267,7 @@ h3 {
   from {
     transform: translate(0, 0) scale(1);
   }
+
   to {
     transform: translate(-25px, -20px) scale(1.06);
   }
@@ -222,15 +277,18 @@ h3 {
   from {
     transform: translate(0, 0) scale(1);
   }
+
   to {
     transform: translate(-20px, 30px) scale(1.1);
   }
 }
 
-/* Splash — the opening title card. Same 3-blob rig as .hero, reusing its keyframes,
-   just bigger and more opaque since this is the single most "alive" moment. JS
-   (splash-parallax.ts) drives its own transform/opacity on scroll; the transition
-   here only smooths that out for anything that isn't scroll-driven (e.g. resize). */
+/* Splash — the opening title card. Three stacked layers, bottom to top: this
+   element's own background (tech grid), the WebGL shader canvas (translucent —
+   see shader-hero.ts, blends over the grid instead of covering it), then the
+   same 3-blob rig .hero uses below the fold. JS (splash-parallax.ts) drives its
+   own transform/opacity on scroll; the transition here only smooths out anything
+   that isn't scroll-driven (e.g. resize). */
 .splash {
   position: relative;
   z-index: 1;
@@ -241,6 +299,20 @@ h3 {
   text-align: center;
   will-change: transform, opacity;
   transition: transform 80ms linear, opacity 80ms linear;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, color-mix(in srgb, var(--accent) 7%, transparent) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, color-mix(in srgb, var(--accent) 7%, transparent) 40px),
+    radial-gradient(ellipse 70% 60% at 50% 45%, transparent 30%, var(--bg) 85%);
+}
+
+.shader-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
 }
 
 .splash::before,
@@ -269,7 +341,7 @@ h3 {
   right: -10%;
   width: 520px;
   height: 520px;
-  background: radial-gradient(circle, #7c3aed, transparent 70%);
+  background: radial-gradient(circle, var(--accent-secondary), transparent 70%);
   animation: blob-drift-b 16s ease-in-out infinite alternate;
 }
 
@@ -285,9 +357,16 @@ h3 {
 .splash-mark {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 700;
+  font-optical-sizing: auto;
+  font-weight: 600;
   font-size: clamp(3.5rem, 16vw, 8rem);
   line-height: 1;
+  /* Solid neon amber instead of gradient-text — a blend of two cool hues was
+     what made the previous version "not stick"; one strong saturated color reads better this large. */
+  color: var(--accent);
+  text-shadow:
+    0 0 40px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 90px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .splash-tag {
@@ -317,10 +396,13 @@ h3 {
 }
 
 @keyframes scroll-cue-bob {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 1;
   }
+
   50% {
     transform: translateY(0.6rem);
     opacity: 0.4;
@@ -388,6 +470,7 @@ h3 {
   from {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
   }
+
   to {
     box-shadow: 0 0 14px 4px color-mix(in srgb, var(--accent) 45%, transparent);
   }
@@ -478,18 +561,18 @@ abbr[title] {
   font-size: 1.3rem;
 }
 
-.tasks{
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: space-evenly;
+.tasks {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-evenly;
 }
 
-.card-task
-{
+.card-task {
   width: 45%;
 }
 
 @media (max-width: 900px) {
+
   /* Side-by-side columns don't fit; stack New task above the list */
   .tasks {
     flex-direction: column;
@@ -497,47 +580,6 @@ abbr[title] {
 
   .card-task {
     width: auto;
-  }
-}
-
-/* Mobile header: brand name alone + hamburger dropdown with nav, user and logout */
-@media (max-width: 700px) {
-  .menu-toggle {
-    display: block;
-    margin-left: auto;
-    font-size: 1.1rem;
-    line-height: 1;
-  }
-
-  .topbar {
-    position: relative;
-  }
-
-  .nav-group {
-    display: none;
-  }
-
-  .nav-group.open {
-    display: grid;
-    gap: 0.75rem;
-    justify-items: start;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    padding: 1rem 1.25rem;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-group.open .nav {
-    margin-left: 0;
-  }
-
-  .nav-group.open .user {
-    width: 100%;
-    justify-content: space-between;
   }
 }
 
@@ -846,6 +888,7 @@ code {
 }
 
 @starting-style {
+
   .error,
   .info {
     opacity: 0;
@@ -987,44 +1030,98 @@ code {
   animation: blur-fade 450ms var(--ease-out-strong) backwards;
 }
 
-.build-facts.reveal-seen .fact:nth-child(1) { animation-delay: 0ms; }
-.build-facts.reveal-seen .fact:nth-child(2) { animation-delay: 70ms; }
-.build-facts.reveal-seen .fact:nth-child(3) { animation-delay: 140ms; }
-.build-facts.reveal-seen .fact:nth-child(4) { animation-delay: 210ms; }
-.build-facts.reveal-seen .fact:nth-child(5) { animation-delay: 280ms; }
+.build-facts.reveal-seen .fact:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.build-facts.reveal-seen .fact:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.build-facts.reveal-seen .fact:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.build-facts.reveal-seen .fact:nth-child(4) {
+  animation-delay: 210ms;
+}
+
+.build-facts.reveal-seen .fact:nth-child(5) {
+  animation-delay: 280ms;
+}
+
 /* Catch-all so newly added facts join the stagger instead of popping in first */
-.build-facts.reveal-seen .fact:nth-child(n + 6) { animation-delay: 350ms; }
+.build-facts.reveal-seen .fact:nth-child(n + 6) {
+  animation-delay: 350ms;
+}
 
-.about.reveal-seen > * {
+.about.reveal-seen>* {
   animation: blur-fade 450ms var(--ease-out-strong) backwards;
 }
 
-.about.reveal-seen > *:nth-child(1) { animation-delay: 0ms; }
-.about.reveal-seen > *:nth-child(2) { animation-delay: 90ms; }
-.about.reveal-seen > *:nth-child(3) { animation-delay: 180ms; }
-.about.reveal-seen > *:nth-child(4) { animation-delay: 270ms; }
+.about.reveal-seen>*:nth-child(1) {
+  animation-delay: 0ms;
+}
 
-.req-coverage.reveal-seen > * {
+.about.reveal-seen>*:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.about.reveal-seen>*:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.about.reveal-seen>*:nth-child(4) {
+  animation-delay: 270ms;
+}
+
+.req-coverage.reveal-seen>* {
   animation: blur-fade 450ms var(--ease-out-strong) backwards;
 }
 
-.req-coverage.reveal-seen > *:nth-child(1) { animation-delay: 0ms; }
-.req-coverage.reveal-seen > *:nth-child(2) { animation-delay: 80ms; }
-.req-coverage.reveal-seen > *:nth-child(3) { animation-delay: 160ms; }
-.req-coverage.reveal-seen > *:nth-child(4) { animation-delay: 240ms; }
+.req-coverage.reveal-seen>*:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.req-coverage.reveal-seen>*:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.req-coverage.reveal-seen>*:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.req-coverage.reveal-seen>*:nth-child(4) {
+  animation-delay: 240ms;
+}
 
 .req-coverage.reveal-seen .req-list li {
   animation: blur-fade 400ms var(--ease-out-strong) backwards;
 }
 
-.req-coverage.reveal-seen .req-list li:nth-child(1) { animation-delay: 240ms; }
-.req-coverage.reveal-seen .req-list li:nth-child(2) { animation-delay: 280ms; }
-.req-coverage.reveal-seen .req-list li:nth-child(3) { animation-delay: 320ms; }
-.req-coverage.reveal-seen .req-list li:nth-child(4) { animation-delay: 360ms; }
-.req-coverage.reveal-seen .req-list li:nth-child(n + 5) { animation-delay: 400ms; }
+.req-coverage.reveal-seen .req-list li:nth-child(1) {
+  animation-delay: 240ms;
+}
 
-/* Login drawer — slides in from the right over the current page */
-.login-drawer {
+.req-coverage.reveal-seen .req-list li:nth-child(2) {
+  animation-delay: 280ms;
+}
+
+.req-coverage.reveal-seen .req-list li:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+.req-coverage.reveal-seen .req-list li:nth-child(4) {
+  animation-delay: 360ms;
+}
+
+.req-coverage.reveal-seen .req-list li:nth-child(n + 5) {
+  animation-delay: 400ms;
+}
+
+/* Drawer — slides in from the right over the current page. Shared by the login
+   form and the mobile nav menu (see app.html) rather than each having its own copy. */
+.drawer {
   position: fixed;
   inset: 0 0 0 auto;
   margin: 0;
@@ -1040,11 +1137,11 @@ code {
   color: var(--text);
 }
 
-.login-drawer[open] {
+.drawer[open] {
   animation: drawer-in 300ms var(--ease-out-strong);
 }
 
-.login-drawer::backdrop {
+.drawer::backdrop {
   background: rgb(0 0 0 / 0.55);
 }
 
@@ -1061,6 +1158,42 @@ code {
 .drawer-close {
   display: block;
   margin-left: auto;
+}
+
+/* Drawer nav — .topbar .nav a styling is topbar-scoped, so without these the
+   drawer's links fell through to default UA link styles (blue/purple visited). */
+.drawer .nav {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.drawer .nav a {
+  display: block;
+  padding: 0.6rem 0.5rem;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.drawer .nav a.active {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
+.drawer .nav a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Identity + log out sit below a divider, apart from the navigation list */
+.drawer .user {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 
 /* Hover states only where a real pointer exists (avoids sticky hover on touch) */
@@ -1090,6 +1223,10 @@ code {
     color: var(--accent-hover);
   }
 
+  .drawer .nav a:hover {
+    background: var(--surface-2);
+  }
+
   .fact:hover,
   .task:hover,
   .card:hover,
@@ -1101,6 +1238,7 @@ code {
 }
 
 @media (max-width: 540px) {
+
   .task-form,
   .task-edit {
     grid-template-columns: 1fr;
@@ -1110,8 +1248,8 @@ code {
     flex-direction: column;
   }
 
-  /* Login drawer covers the whole screen on phones */
-  .login-drawer {
+  /* Drawer covers the whole screen on phones */
+  .drawer {
     width: 100%;
     border-left: none;
   }
@@ -1119,6 +1257,7 @@ code {
 
 /* Reduced motion: keep color/opacity feedback, drop movement */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

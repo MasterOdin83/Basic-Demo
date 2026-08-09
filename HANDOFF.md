@@ -2,11 +2,11 @@
 
 ## Qué se hizo
 
-Todo en `Basic.UI` (showcase para la entrevista técnica de EPAM), sin commitear todavía:
+Todo en `Basic.UI` (showcase para el ejercicio técnico "Security Demo"), sin commitear todavía:
 
-- Rebrand completo: "Ballastlane - .NET - Technical Interview Exercise" → "EPAM" en título, header y eyebrow (`index.html`, `app.html`, `home.html`, `app.spec.ts` actualizado).
+- Rebrand completo: identidad de cliente original → "Security Demo" en título, header y eyebrow (`index.html`, `app.html`, `home.html`, `app.spec.ts` actualizado).
 - Copy condensado en las 6 fact-cards y en "Requirements coverage" (de párrafos a una línea cada uno).
-- **Requirements coverage ahora es MD-driven**: contenido vive en `public/requirements-coverage.md`, se fetchea y parsea en runtime (`home/requirements.ts`, parser propio sin dependencias, con `requirements.spec.ts`). Editar el `.md` es suficiente para cambiar la página — no hace falta tocar el template. Verificado contra `REQ-BLA-technical-exercise.md` (el brief real del ejercicio) — se agregó la línea de "Presentation & code review" que faltaba.
+- **Requirements coverage ahora es MD-driven**: contenido vive en `public/requirements-coverage.md`, se fetchea y parsea en runtime (`home/requirements.ts`, parser propio sin dependencias, con `requirements.spec.ts`). Editar el `.md` es suficiente para cambiar la página — no hace falta tocar el template. Verificado contra `REQ-flagship-demo-technical-exercise.md` (el brief real del ejercicio) — se agregó la línea de "Presentation & code review" que faltaba.
 - Sección `#about` nueva con bio real del dueño del sitio (ya no es placeholder) y link a `https://proud-coast-051f45010.7.azurestaticapps.net/en/about` (Spartan IT, vía `environment.ts`/`environment.prod.ts` — local apunta a `localhost:55112`, prod a la URL real).
 - **Bug de gradiente cortado**: causado por `overflow:hidden` en `.hero` cortando el glow que intencionalmente se sale del cuadro. Arreglado moviendo el overflow-hidden a `body` (solo el eje horizontal).
 - **Bug del headline (dos veces roto, revertido)**: se intentó un split por palabra para animación staggered; falló dos veces (palabras pegadas, luego palabras cada una en su línea). Revertido por completo a texto plano simple — no reintentar la técnica sin evidencia sólida de por qué fallaba.

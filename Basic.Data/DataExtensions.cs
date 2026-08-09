@@ -15,6 +15,7 @@ public static class DataExtensions
         services.AddDbContext<AppDbContext>(o => o.UseSqlite(connectionString));
         services.AddScoped<ITaskRepository, EfTaskRepository>();
         services.AddScoped<IUserRepository, EfUserRepository>();
+        services.AddScoped<ISessionStore, EfSessionStore>();
         services.AddScoped<TaskService>();
         services.AddScoped<UserService>();
         return services;

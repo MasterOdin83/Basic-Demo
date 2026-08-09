@@ -1,6 +1,6 @@
-# Ballastlane - .NET - Technical Interview Exercise
+# Security Demo - .NET Technical Interview Exercise
 
-Simple task management app built for the BLA technical exercise: Clean Architecture, TDD, ASP.NET Core Web API, SQLite, and Angular.
+Simple task management app built for a .NET technical interview exercise: Clean Architecture, TDD, ASP.NET Core Web API, SQLite, and Angular.
 
 **User story:** *As a registered user, I want to create, view, edit, and delete my personal tasks (with title, description, status, and due date) so I can keep track of my work. Only I can see and manage my own tasks.*
 

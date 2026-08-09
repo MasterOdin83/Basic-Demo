@@ -3,6 +3,7 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, signal
 import { environment } from '../../environments/environment';
 import { observeReveals } from './reveal';
 import { parseRequirements, RequirementItem } from './requirements';
+import { observeShaderHero } from './shader-hero';
 import { observeSplashParallax } from './splash-parallax';
 import { observeSpotlight } from './spotlight';
 
@@ -17,6 +18,7 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
   private stopReveals?: () => void;
   private stopParallax?: () => void;
   private stopSpotlight?: () => void;
+  private stopShaderHero?: () => void;
 
   readonly spartanItAboutUrl = environment.spartanItAboutUrl;
 
@@ -42,6 +44,7 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Self-guards on pointer type + reduced motion; safe to call unconditionally.
     this.stopSpotlight = observeSpotlight(this.el.nativeElement.querySelector('.home-layout'));
+    this.stopShaderHero = observeShaderHero(this.el.nativeElement.querySelector('.shader-canvas'));
 
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const targets = this.el.nativeElement.querySelectorAll('.build-facts, .about, .req-coverage');
@@ -53,5 +56,6 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
     this.stopReveals?.();
     this.stopParallax?.();
     this.stopSpotlight?.();
+    this.stopShaderHero?.();
   }
 }

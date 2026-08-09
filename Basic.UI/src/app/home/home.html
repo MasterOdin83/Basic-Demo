@@ -1,14 +1,16 @@
 <div class="home-layout">
   <section class="splash" aria-hidden="true">
+    <canvas class="shader-canvas" aria-hidden="true"></canvas>
     <div class="aura" aria-hidden="true"></div>
-    <p class="splash-mark gradient-text">EPAM</p>
+    <p class="splash-mark">Security Demo</p>
     <p class="splash-tag">Full-stack, shipped end to end.</p>
+    <p class="splash-tag">Per Aspera Ad Astra</p>
     <div class="scroll-cue"></div>
   </section>
 
   <section class="hero">
     <div class="aura" aria-hidden="true"></div>
-    <p class="eyebrow">EPAM</p>
+    <p class="eyebrow">Security Demo</p>
     <h2 class="headline">How I build, <span class="gradient-text">shown end to end</span></h2>
     <p class="lede">
       This task manager is the flagship example — versioned requirements, clean architecture,
@@ -57,7 +59,7 @@
       <div class="fact">
         <h3>Security</h3>
         <p>
-          Server-side validation, <abbr title="JSON Web Token — a signed token that proves who you are to the API">JWT</abbr> auth,
+          Server-side validation, <abbr title="Backend for Frontend — the browser only ever holds an HttpOnly session cookie, no token of any kind ever reaches client-side JS">BFF</abbr> session auth,
           hardened
           <a
             href="https://securityheaders.com/?q=https%3A%2F%2Fthankful-sea-0308a2310.7.azurestaticapps.net%2F&amp;followRedirects=on"
@@ -72,7 +74,7 @@
         <dl class="stats">
           <div class="stat"><dt>Agent passes</dt><dd>6</dd></div>
           <div class="stat"><dt>Tokens spent iterating live</dt><dd>~831K</dd></div>
-          <div class="stat"><dt>Tests written</dt><dd>24</dd></div>
+          <div class="stat"><dt>Tests written</dt><dd>63</dd></div>
           <div class="stat"><dt>Bugs caught &amp; fixed</dt><dd>3</dd></div>
         </dl>
         <p class="hint">Includes two failed attempts at one CSS bug — reverted live rather than shipped broken.</p>

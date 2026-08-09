@@ -1,6 +1,6 @@
-# REQ — .NET Technical Interview Exercise (BLA, V6)
+# REQ — .NET Technical Interview Exercise (Flagship Demo, V6)
 
-> Fuente: `Net - BLA - Technical Interview Exercise - V6.pdf` (3 páginas).
+> Fuente: brief técnico del ejercicio (V6, PDF de 3 páginas).
 
 ## Overview
 
@@ -78,9 +78,9 @@ Entregables del candidato:
 
 ## Estado de implementación — v0.6 (2026-08-08, sin commitear)
 
-### Cambios v0.6 (2026-08-08) — sesión EPAM showcase, hard-stop por contexto lleno
+### Cambios v0.6 (2026-08-08) — sesión de rebrand a "Security Demo", hard-stop por contexto lleno
 - Ver `HANDOFF.md` (raíz del repo) para el detalle completo — esta entrada es el resumen corto.
-- Rebrand Ballastlane → EPAM en toda la UI; About con bio real y link a Spartan IT (env-aware, local/prod).
+- Rebrand del branding de cliente original → identidad neutral "Security Demo" en toda la UI; About con bio real y link a Spartan IT (env-aware, local/prod).
 - Requirements coverage migrado a MD-driven (`public/requirements-coverage.md`, parser propio sin deps) — verificado línea por línea contra este mismo documento, se agregó "Presentation & code review" que faltaba.
 - Animación: aura de fondo, glassmorphism, scroll-reveal, spotlight de cursor, splash con parallax. Paleta cyan/violeta reemplazó el naranja original.
 - Dos bugs de headline (palabras pegadas, luego cada palabra en su línea) — revertido a texto plano tras el segundo fallo en vez de un tercer intento a ciegas (regla de máx. 2 reintentos, ver `AGENT-OPERATING-NOTES.md`).
@@ -91,7 +91,7 @@ Entregables del candidato:
 
 ### Cambios v0.5 (2026-07-19)
 - **Refresh tokens (pedido del usuario: "expirado no desloguea ni refresca"):** el login del STS ahora emite access token de **3 minutos** (`Jwt:AccessTokenMinutes`, valor demo) + refresh token JWT stateless de **1 día** (`Jwt:RefreshTokenDays`, expiración absoluta, sin rotación/revocación — comentado como decisión deliberada). Nuevo `POST /api/auth/refresh`. El refresh token lleva audience propia (`BasicApp.refresh`), así las APIs de recursos lo rechazan como bearer y el access token no sirve para refrescar (testeado en ambas direcciones). `ClockSkew = Zero` en ambas APIs: el skew default de 5 min mantenía vivo un token de 3 min durante 8. El interceptor Angular ante un 401 refresca una vez y reintenta el request; si el refresh falla (día vencido o sin refresh token) limpia sesión y navega a login — criterio de aceptación: expirado ⇒ refresca en silencio o desloguea, nunca queda colgado.
-- **Header móvil (≤700px):** brand reducido a "Ballastlane" solo (`.brand-tail` oculto) y menú hamburguesa (`.nav-group` con `display: contents` en desktop — layout intacto — y dropdown toggled por signal `menuOpen` en móvil) con My tasks, usuario y Log out.
+- **Header móvil (≤700px):** brand reducido a "Security Demo" solo (`.brand-tail` oculto) y menú hamburguesa (`.nav-group` con `display: contents` en desktop — layout intacto — y dropdown toggled por signal `menuOpen` en móvil) con My tasks, usuario y Log out.
 - **Tasks en móvil (≤900px):** las dos columnas (`.tasks` flex) se apilan en vertical — el layout lado a lado del fix desktop recortaba la columna New task en pantallas angostas.
 - Tests: **37 backend + 6 UI**, todos verdes (nuevos: flujo refresh end-to-end, mal uso de tipos de token en ambas direcciones, token expirado ⇒ 401 exacto).
 
@@ -107,8 +107,8 @@ Entregables del candidato:
 - Tests: **35 backend + 6 UI**, todos verdes.
 
 ### Cambios v0.3 (2026-07-17)
-- UI renombrada a "Ballastlane - .NET - Technical Interview Exercise" (title, topbar, README).
-- Login convertido en landing para revisores: tema Ballast Lane (fondo negro, acento #FE5A0B, serif + gradiente), tarjetas "how it was built" (stack, arquitectura, TDD, SDLC, GenAI), sección **Requirements coverage** que mapea cada requerimiento del brief a su implementación (pendientes marcados como tales), credenciales demo visibles y animaciones de entrada (stagger, ease-out fuerte, gated por `prefers-reduced-motion` y `hover: hover`).
+- UI renombrada de la identidad de cliente original a "Security Demo" (title, topbar, README).
+- Login convertido en landing para revisores: tema original (fondo negro, acento #FE5A0B, serif + gradiente), tarjetas "how it was built" (stack, arquitectura, TDD, SDLC, GenAI), sección **Requirements coverage** que mapea cada requerimiento del brief a su implementación (pendientes marcados como tales), credenciales demo visibles y animaciones de entrada (stagger, ease-out fuerte, gated por `prefers-reduced-motion` y `hover: hover`).
 - Seguridad anti-enumeración: registro responde `201` o `400` vacío (`SuppressMapClientErrors`), regla de contraseña validada en la UI, test de regresión `Register_rejection_reveals_no_reason` (32 tests backend).
 - Deploy QA: workflow `master_qa-demo-sts.yml` (generado por Azure) apuntado a `BasicSTS.API.csproj`; `environment.prod.ts` con orígenes reales `https://` de ambos App Services.
 
@@ -129,7 +129,43 @@ Entregables del candidato:
 - `EnsureCreated()` con guard anti-carrera (ambas APIs comparten el archivo SQLite y pueden arrancar a la vez) en lugar de migraciones.
 - Anti user-enumeration (2026-07-17): el registro responde creado o `400` sin cuerpo ni motivo (nunca "username ya existe"); la regla de contraseña se valida en la UI. Aplica a todo diseño futuro.
 
-### Pendiente
-1. Segundo repositorio de datos: Supabase vía `Npgsql.EntityFrameworkCore.PostgreSQL`, selección por config (`"Database": "sqlite" | "supabase"`), sin tocar `Basic.Core`.
-2. Sección GenAI del ejercicio: documentar prompts usados, cómo se validó/corrigió el código generado y manejo de edge cases/auth.
-3. Presentación: guion de user story, arquitectura y demo.
+### Pendiente — v0.7, práctica para próxima entrevista (2026-08-09)
+
+Claude escribe el requerimiento, Copilot implementa. Documentar el prompt usado en
+cada item (va directo a la sección GenAI del ejercicio, punto 8 de abajo).
+
+**Backend**
+1. **BFF/Redis session** (ya tiene test rojo): `Login_sets_session_cookie_and_omits_tokens_from_body`
+   en `Basic.Test/EndpointTests.cs:98` — el login debe emitir cookie `session`
+   `HttpOnly` + `Secure` + `SameSite=Strict` en vez de devolver los tokens en el
+   body; el JWT/refresh token real vive server-side en Redis (`IDistributedCache`,
+   ya faked en el test setup, línea 33) bajo la key de esa sesión. Confirmado
+   hoy con el usuario: hoy `auth.service.ts:23-25` guarda `token`/`refreshToken`
+   en `localStorage` — legible por cualquier script inyectado (XSS → robo de
+   token). Ese `localStorage` y el `Authorization: Bearer` que arma
+   `auth.interceptor.ts:13` desaparecen enteros; el navegador manda la cookie
+   solo. Gap encontrado de paso: `Program.cs` de ambas APIs tiene `WithOrigins`
+   pero no `.AllowCredentials()` — sin eso el browser no manda una cookie
+   `HttpOnly` cross-origin (UI en `:58906`, APIs en `:5143`/`:5216`); agregarlo
+   ahí + `withCredentials: true` en las llamadas HttpClient de Angular.
+2. Segundo repositorio de datos: Supabase vía `Npgsql.EntityFrameworkCore.PostgreSQL`,
+   selección por config (`"Database": "sqlite" | "supabase"`), sin tocar `Basic.Core`.
+
+**Frontend**
+3. Páginas de detalle por fact-card (`/details/:id`) — intención real de cada decisión
+   + código citado del repo. Revisar `git diff Basic.UI/src/app/home/` primero, puede
+   estar parcialmente hecho de la sesión anterior.
+4. Chart de economía de tokens en la card "Built with GenAI" (los números ya están
+   como texto en `home.html` — agent passes, tokens, tests, bugs).
+5. Verificar que el rebrand a "Security Demo" no rompió nada visual: `splash-mark`
+   es texto más largo que "EPAM" (clamp `3.5rem`–`8rem`), y el header móvil
+   (`.brand-tail` oculto ≤700px) — confirmar que sigue legible.
+
+**DevOps** (fase 2, una vez lo de arriba esté estable — plan completo en `AGENT-OPERATING-NOTES.md`)
+6. Containerizar `Basic.API` + `BasicSTS.API` (no la UI) con `kind`/Docker Desktop local.
+7. Adaptar los workflows de GitHub Actions existentes a build+push+deploy.
+
+**Entrevista**
+8. Sección GenAI del ejercicio: documentar prompts usados en 1–7, cómo se validó/
+   corrigió el código generado y manejo de edge cases/auth.
+9. Presentación: guion de user story, arquitectura y demo.

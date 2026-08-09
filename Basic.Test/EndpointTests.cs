@@ -1,26 +1,20 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Claims;
-using System.Text;
+using System.Security.Cryptography;
 using System.Text.Json;
+using Basic.Core.Entities;
+using Basic.Core.Repositories;
 using Basic.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Basic.Test;
 
 internal static class TestApp
 {
-    // Same dev values as both APIs' appsettings.json.
-    public const string JwtKey = "dev-only-secret-key-basic-demo-32chars!!";
-
     public static (WebApplicationFactory<TMarker> Factory, SqliteConnection Connection) Create<TMarker>() where TMarker : class
     {
         var connection = new SqliteConnection("Data Source=:memory:");
@@ -30,28 +24,26 @@ internal static class TestApp
             {
                 services.RemoveAll<DbContextOptions<AppDbContext>>();
                 services.AddDbContext<AppDbContext>(o => o.UseSqlite(connection));
-                // Fakes Redis for tests: same IDistributedCache contract, no real server needed.
-                services.RemoveAll<IDistributedCache>();
-                services.AddDistributedMemoryCache();
             }));
         return (factory, connection);
     }
 
-    public static string TokenFor(int userId, string username, DateTime? expires = null) =>
-        new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
+    // Seeds a session directly (bypassing /login) and returns its id, for tests
+    // that want an authenticated client without exercising the login flow itself.
+    public static async Task<string> SeedSessionAsync(IServiceProvider services, int userId, string username, DateTime? expiresAtUtc = null)
+    {
+        using var scope = services.CreateScope();
+        var sessions = scope.ServiceProvider.GetRequiredService<ISessionStore>();
+        var id = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+        await sessions.CreateAsync(new Session
         {
-            Issuer = "BasicSTS",
-            Audience = "BasicApp",
-            Subject = new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Name, username)
-            ]),
-            NotBefore = expires?.AddMinutes(-5),
-            Expires = expires ?? DateTime.UtcNow.AddMinutes(30),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey)), SecurityAlgorithms.HmacSha256)
+            Id = id,
+            UserId = userId,
+            Username = username,
+            ExpiresAtUtc = expiresAtUtc ?? DateTime.UtcNow.AddDays(1)
         });
+        return id;
+    }
 }
 
 public class StsEndpointTests : IDisposable
@@ -76,20 +68,19 @@ public class StsEndpointTests : IDisposable
     [Fact]
     public async Task Register_login_and_me_flow()
     {
+        // Fresh, cookie-less client first: /me must reject before any session exists.
+        using var anonymous = _factory.CreateClient();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/auth/me")).StatusCode);
+
         var register = await _client.PostAsJsonAsync("/api/auth/register", new { username = "alice", password = "password123" });
         Assert.Equal(HttpStatusCode.Created, register.StatusCode);
 
         var login = await _client.PostAsJsonAsync("/api/auth/login", new { username = "alice", password = "password123" });
         login.EnsureSuccessStatusCode();
-        var token = (await login.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString();
-        Assert.False(string.IsNullOrEmpty(token));
 
-        // Unauthorized without token, authorized with it.
-        Assert.Equal(HttpStatusCode.Unauthorized, (await _client.GetAsync("/api/auth/me")).StatusCode);
-
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var me = await _client.SendAsync(request);
+        // _client has HandleCookies on (WebApplicationFactory default) — the session
+        // cookie from login rides along automatically, no manual header needed.
+        var me = await _client.GetAsync("/api/auth/me");
         me.EnsureSuccessStatusCode();
         Assert.Equal("alice", (await me.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("username").GetString());
     }
@@ -102,7 +93,9 @@ public class StsEndpointTests : IDisposable
         login.EnsureSuccessStatusCode();
 
         Assert.True(login.Headers.TryGetValues("Set-Cookie", out var cookies));
-        Assert.Contains(cookies!, c => c.StartsWith("session=") && c.Contains("HttpOnly"));
+        // ASP.NET Core renders cookie flags lowercase ("httponly", not "HttpOnly") —
+        // they're case-insensitive tokens per RFC 6265, so the check should be too.
+        Assert.Contains(cookies!, c => c.StartsWith("session=") && c.Contains("httponly", StringComparison.OrdinalIgnoreCase));
 
         var body = await login.Content.ReadFromJsonAsync<JsonElement>();
         Assert.False(body.TryGetProperty("token", out _));
@@ -131,30 +124,16 @@ public class StsEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task Refresh_issues_working_token_and_rejects_wrong_token_types()
+    public async Task Logout_clears_the_server_side_session()
     {
-        await _client.PostAsJsonAsync("/api/auth/register", new { username = "dave", password = "password123" });
-        var login = await _client.PostAsJsonAsync("/api/auth/login", new { username = "dave", password = "password123" });
-        var session = await login.Content.ReadFromJsonAsync<JsonElement>();
-        var refreshToken = session.GetProperty("refreshToken").GetString();
+        await _client.PostAsJsonAsync("/api/auth/register", new { username = "frank", password = "password123" });
+        await _client.PostAsJsonAsync("/api/auth/login", new { username = "frank", password = "password123" });
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync("/api/auth/me")).StatusCode);
 
-        var refresh = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken });
-        refresh.EnsureSuccessStatusCode();
-        var newToken = (await refresh.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString();
-
-        var me = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
-        me.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
-        var meResponse = await _client.SendAsync(me);
-        meResponse.EnsureSuccessStatusCode();
-        Assert.Equal("dave", (await meResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("username").GetString());
-
-        // Audiences differ: an access token is no refresh token, and a refresh token is no bearer token.
-        var misuse = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = session.GetProperty("token").GetString() });
-        Assert.Equal(HttpStatusCode.Unauthorized, misuse.StatusCode);
-
-        var bearerMisuse = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
-        bearerMisuse.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshToken);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await _client.SendAsync(bearerMisuse)).StatusCode);
+        // The cookie itself isn't readable/clearable by JS (HttpOnly) — logout has to
+        // be a real server round-trip that drops the session record.
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.PostAsJsonAsync("/api/auth/logout", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _client.GetAsync("/api/auth/me")).StatusCode);
     }
 
     [Fact]
@@ -179,7 +158,8 @@ public class TasksEndpointTests : IDisposable
         (_factory, _connection) = TestApp.Create<Basic.API.Controllers.TasksController>();
         _client = _factory.CreateClient();
         // Seeded demo user gets Id 1.
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TestApp.TokenFor(1, "demo"));
+        var sessionId = TestApp.SeedSessionAsync(_factory.Services, 1, "demo").GetAwaiter().GetResult();
+        _client.DefaultRequestHeaders.Add("Cookie", $"session={sessionId}");
     }
 
     public void Dispose()
@@ -190,7 +170,7 @@ public class TasksEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task Without_token_tasks_are_unauthorized_but_statuses_are_public()
+    public async Task Without_session_tasks_are_unauthorized_but_statuses_are_public()
     {
         using var anonymous = _factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/tasks")).StatusCode);
@@ -201,12 +181,11 @@ public class TasksEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task Expired_token_is_unauthorized()
+    public async Task Expired_session_is_unauthorized()
     {
-        // Guards ClockSkew = Zero: with the default 5-min skew this token would still pass.
         using var expired = _factory.CreateClient();
-        expired.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", TestApp.TokenFor(1, "demo", DateTime.UtcNow.AddMinutes(-1)));
+        var sessionId = await TestApp.SeedSessionAsync(_factory.Services, 1, "demo", DateTime.UtcNow.AddMinutes(-1));
+        expired.DefaultRequestHeaders.Add("Cookie", $"session={sessionId}");
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await expired.GetAsync("/api/tasks")).StatusCode);
     }
@@ -257,9 +236,10 @@ public class TasksEndpointTests : IDisposable
     [Fact]
     public async Task Anothers_task_is_not_visible()
     {
-        // Token for a second, non-existent-data user: sees an empty list, not demo's tasks.
+        // Session for a second, non-existent-data user: sees an empty list, not demo's tasks.
         using var other = _factory.CreateClient();
-        other.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TestApp.TokenFor(999, "intruder"));
+        var sessionId = await TestApp.SeedSessionAsync(_factory.Services, 999, "intruder");
+        other.DefaultRequestHeaders.Add("Cookie", $"session={sessionId}");
 
         var tasks = await other.GetFromJsonAsync<JsonElement>("/api/tasks");
         Assert.Equal(0, tasks.GetArrayLength());
