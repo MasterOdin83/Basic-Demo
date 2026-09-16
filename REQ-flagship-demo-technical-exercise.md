@@ -169,3 +169,13 @@ cada item (va directo a la sección GenAI del ejercicio, punto 8 de abajo).
 8. Sección GenAI del ejercicio: documentar prompts usados en 1–7, cómo se validó/
    corrigió el código generado y manejo de edge cases/auth.
 9. Presentación: guion de user story, arquitectura y demo.
+
+
+## 2026-09-15 — BFF retirado; JWT del STS + captcha Turnstile + rate limiting
+
+- **Decisión (Héctor):** no habrá BFF por ahora. Cada UI tiene su API y, aparte, el STS (`BasicSTS.API`; en QA el App Service compartido `qa-mercenaries-sts`). El BFF/cookie de sesión regresa cuando todo corra en Azure.
+- **Cambio:** se revirtió el flujo de cookie HttpOnly + `ISessionStore` (commit `7bfb10d`) al flujo JWT anterior: access token de 3 min + refresh token de 1 día emitidos por el STS, interceptor Bearer con refresh silencioso y logout local. Se conservaron el drawer móvil, el shader del hero y los docs de cobertura.
+- **Captcha:** Cloudflare Turnstile en login y registro (`captchaToken` en el body; `CaptchaVerifier` lo valida contra `siteverify`; 403 si falla). Dev/QA con las claves de prueba de Cloudflare (siempre pasan); fuera de Development el STS no arranca sin `Captcha:Secret`.
+- **Rate limiting:** 10 intentos/min por IP en login/register/refresh y 100 req/min por IP en cada API (429); `X-Forwarded-For` respetado fuera de Development.
+- **Tests:** 39 backend (nuevos: sin token de captcha → 403 en login y registro; intento 11 → 429) + 24 de UI, todos verdes. `ng build` verde.
+- **Pendiente de Héctor:** widget real de Turnstile (site key en `environment.prod.ts`, secreto en `Captcha__Secret`), secrets OIDC del workflow `master_qa-mercenaries-sts.yml` y, con ese deploy en verde, apuntar `stsUrl` al STS compartido.

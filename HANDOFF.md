@@ -1,3 +1,25 @@
+# Handoff — 2026-09-15 (sin BFF: JWT del STS + captcha Turnstile + rate limiting)
+
+## Resumen para Héctor
+- **Hecho (`master` = QA thankful-sea + qa-demo-sts + qa-demo-api)**: fuera el BFF (cookie HttpOnly + `ISessionStore` de `7bfb10d`); de vuelta el flujo JWT del STS (access 3 min + refresh 1 día, interceptor Bearer con refresh silencioso), como pediste: cada UI con su API y aparte el STS. Captcha de Cloudflare Turnstile en login y registro (el STS verifica el token; 403 si falla) y rate limiting en las dos APIs (10/min por IP en login/register/refresh, 100/min por IP global; 429). Se conservan el drawer móvil y todo lo visual. 39 tests backend + 24 de UI verdes; `ng build` verde.
+- **QA funciona con las claves de PRUEBA de Turnstile** (siempre pasan: site key `1x00000000000000000000AA` en `environment.prod.ts`, secreto en `appsettings.QA.json`). Para que de verdad frene bots: dash.cloudflare.com → Turnstile → «Add widget» (hostname `thankful-sea-0308a2310.7.azurestaticapps.net`, y luego el dominio real) → site key a `environment.prod.ts` y secreto al App Setting `Captcha__Secret` del STS. Fuera de Development el STS no arranca sin secreto.
+- **STS compartido `qa-mercenaries-sts`** (`qa-mercenaries-sts-gcexaggxdme7gffs.westus3-01.azurewebsites.net`): ya tiene workflow (`.github/workflows/master_qa-mercenaries-sts.yml`, publica `BasicSTS.API`) y `appsettings.QA.json` admite las tres UIs de QA en CORS (thankful-sea, proud-coast, mango-desert). La UI sigue apuntando a `qa-demo-sts` para no romper el demo mientras el nuevo no despliega. Te toca: (1) Deployment Center del App Service → GitHub Actions (repo Basic-Demo, rama `master`): copia los 3 secrets que genere a los nombres del workflow (`AZUREAPPSERVICE_CLIENTID_QA_MERCENARIES_STS`, `…TENANTID…`, `…SUBSCRIPTIONID…`) o borra mi workflow y deja el de Azure apuntando a `BasicSTS.API/BasicSTS.API.csproj`; (2) App Settings `ASPNETCORE_ENVIRONMENT=QA`, `Captcha__Secret`, `Jwt__Key` (la misma que valide cada API que use sus tokens); (3) con el deploy en verde, cambiar `stsUrl` en `environment.prod.ts` y push. Cuando TurboEmpresa y Spartan usen este STS necesitarán validar sus JWT con esa misma `Jwt__Key` y audiencia: eso entra con tu re-arquitectura.
+- **Queda de tu lado además**: revisar el login en QA (widget de Turnstile visible en el drawer; el botón se habilita cuando pasa), probar 11 logins fallidos seguidos → «Too many attempts».
+
+## Qué se hizo
+- Revertidos a la versión JWT (`d9d9794`): `BasicSTS.API/Program.cs` y `Controllers/AuthController.cs`, `Basic.API/Program.cs`, `appsettings.json` de ambas, `Basic.UI/src/app/auth.service.ts`, `auth.interceptor.ts`, `auth.guard.ts` (+ spec; redirigen a `/`, ya no hay `/login`), `app.ts` (sin `restore()`), `Basic.Test/EndpointTests.cs`. Borrados: `SessionAuthenticationHandler.cs` (×2), `Basic.Core/Entities/Session.cs`, `Basic.Core/Repositories/ISessionStore.cs`, `Basic.Data/EfSessionStore.cs`; `AppDbContext`/`DataExtensions` sin `Sessions`.
+- Nuevos: `BasicSTS.API/CaptchaVerifier.cs`, `Basic.UI/src/app/turnstile.ts` (directiva `appTurnstile`, render explícito, reset tras cada envío), `.github/workflows/master_qa-mercenaries-sts.yml`. `CredentialsRequest` con `CaptchaToken`; `[EnableRateLimiting("auth")]` en el controlador (`/me` exento); `UseRateLimiter` + `UseForwardedHeaders` (XForwardedFor+Proto, fuera de Development) en ambas APIs; `Captcha:Secret` en `appsettings*.json`; `turnstileSiteKey` en `environment*.ts`; script de Turnstile en `index.html`; `login.ts|html` con token, mensajes para 403/429 y botón bloqueado hasta pasar el captcha. Docs: README, `requirements-coverage.md`, `REQ-…md`, `AGENT-OPERATING-NOTES.md`, `home.html` (fact-card de seguridad).
+- Tests: `TestApp.Create(captchaSecret)` apaga el captcha por defecto; nuevos `Login_and_register_without_captcha_token_are_forbidden_when_captcha_is_configured` y `Login_is_rate_limited_after_10_attempts_per_minute`; fuera el test rojo del BFF.
+
+## Estado actual
+- `master` pusheado (SWA + qa-demo-sts + qa-demo-api se redeployan solos). QA usa claves de prueba de Turnstile. `qa-mercenaries-sts` sin secrets ni App Settings → su workflow falla hasta el paso (1).
+
+## Next steps (en orden)
+1. Héctor: Turnstile real + secrets/App Settings de `qa-mercenaries-sts` + cambio de `stsUrl`.
+2. Fase 2 (Docker/K8s) y BFF/Redis siguen en `AGENT-OPERATING-NOTES.md`, diferidos hasta que todo corra en Azure.
+
+---
+
 # Handoff — 2026-08-08
 
 ## Qué se hizo

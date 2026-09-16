@@ -1,22 +1,28 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
+using System.Text;
 using Basic.Core.Entities;
-using Basic.Core.Repositories;
 using Basic.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BasicSTS.API.Controllers;
 
-public record CredentialsRequest(string Username, string Password);
+public record CredentialsRequest(string Username, string Password, string? CaptchaToken = null);
+
+public record RefreshRequest(string RefreshToken);
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(UserService users, IConfiguration config, ISessionStore sessions) : ControllerBase
+[EnableRateLimiting("auth")]
+public class AuthController(UserService users, IConfiguration config, CaptchaVerifier captcha) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(CredentialsRequest request)
     {
+        if (!await CaptchaPassedAsync(request.CaptchaToken)) return CaptchaFailed();
         try
         {
             var user = await users.RegisterAsync(request.Username, request.Password);
@@ -32,51 +38,79 @@ public class AuthController(UserService users, IConfiguration config, ISessionSt
     [HttpPost("login")]
     public async Task<IActionResult> Login(CredentialsRequest request)
     {
+        if (!await CaptchaPassedAsync(request.CaptchaToken)) return CaptchaFailed();
         var user = await users.ValidateCredentialsAsync(request.Username, request.Password);
         if (user is null) return Unauthorized(new { error = "Invalid username or password." });
 
-        var expiresAtUtc = DateTime.UtcNow.AddDays(config.GetValue<int>("Session:LifetimeDays"));
-        var sessionId = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        await sessions.CreateAsync(new Session
+        return Ok(new
         {
-            Id = sessionId,
-            UserId = user.Id,
-            Username = user.Username,
-            ExpiresAtUtc = expiresAtUtc
+            token = CreateAccessToken(user.Id, user.Username),
+            refreshToken = CreateToken(user.Id, user.Username, RefreshAudience,
+                TimeSpan.FromDays(config.GetValue<int>("Jwt:RefreshTokenDays"))),
+            user.Id,
+            user.Username
         });
-
-        // Secure reflects the actual scheme of the incoming request (correct behind
-        // Azure's TLS-terminating proxy too — see UseForwardedHeaders in Program.cs)
-        // rather than a hardcoded flag, so local http dev keeps working.
-        Response.Cookies.Append(SessionAuthenticationHandler.CookieName, sessionId, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Strict,
-            Expires = new DateTimeOffset(expiresAtUtc),
-            Path = "/"
-        });
-        return Ok(new { user.Username });
     }
 
-    // JS can't clear an HttpOnly cookie itself — logout has to be a real server call
-    // that both drops the session record and expires the cookie.
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
+    // ponytail: stateless refresh JWT (absolute expiry, no rotation/revocation); store tokens if revocation is ever needed.
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(RefreshRequest request)
     {
-        if (Request.Cookies.TryGetValue(SessionAuthenticationHandler.CookieName, out var sessionId))
+        var result = await new JsonWebTokenHandler().ValidateTokenAsync(request.RefreshToken,
+            new TokenValidationParameters
+            {
+                ValidIssuer = config["Jwt:Issuer"],
+                ValidAudience = RefreshAudience,
+                IssuerSigningKey = SigningKey,
+                ClockSkew = TimeSpan.Zero
+            });
+        if (!result.IsValid) return Unauthorized();
+
+        var identity = result.ClaimsIdentity;
+        return Ok(new
         {
-            await sessions.RemoveAsync(sessionId);
-        }
-        Response.Cookies.Delete(SessionAuthenticationHandler.CookieName, new CookieOptions { Path = "/" });
-        return NoContent();
+            token = CreateAccessToken(
+                int.Parse(identity.FindFirst(ClaimTypes.NameIdentifier)!.Value),
+                identity.FindFirst(ClaimTypes.Name)!.Value)
+        });
     }
 
     [Authorize]
+    [DisableRateLimiting]
     [HttpGet("me")]
     public IActionResult Me() => Ok(new
     {
         Id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
         Username = User.Identity!.Name
     });
+
+    // Turnstile guards the human-facing entry points only; the resource APIs never see a captcha.
+    private Task<bool> CaptchaPassedAsync(string? token) =>
+        captcha.VerifyAsync(token, HttpContext.Connection.RemoteIpAddress?.ToString());
+
+    private ObjectResult CaptchaFailed() =>
+        StatusCode(StatusCodes.Status403Forbidden, new { error = "Captcha verification failed." });
+
+    // Refresh tokens carry their own audience so the resource APIs (audience "BasicApp") reject them.
+    private string RefreshAudience => config["Jwt:Audience"] + ".refresh";
+
+    private SymmetricSecurityKey SigningKey => new(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+
+    private string CreateAccessToken(int id, string username) =>
+        CreateToken(id, username, config["Jwt:Audience"]!,
+            TimeSpan.FromMinutes(config.GetValue<int>("Jwt:AccessTokenMinutes")));
+
+    private string CreateToken(int id, string username, string audience, TimeSpan lifetime) =>
+        new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
+        {
+            Issuer = config["Jwt:Issuer"],
+            Audience = audience,
+            Subject = new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, id.ToString()),
+                new Claim(ClaimTypes.Name, username)
+            ]),
+            Expires = DateTime.UtcNow.Add(lifetime),
+            SigningCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256)
+        });
 }

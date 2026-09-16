@@ -1,37 +1,49 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { catchError, of, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { STS_URL } from './api';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  readonly username = signal<string | null>(null);
+  readonly username = signal<string | null>(localStorage.getItem('username'));
 
-  login(username: string, password: string) {
+  get token(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  // captchaToken: Turnstile token from the login form; the STS verifies it with Cloudflare.
+  login(username: string, password: string, captchaToken: string) {
     return this.http
-      .post<{ username: string }>(`${STS_URL}/api/auth/login`, { username, password })
-      .pipe(tap((r) => this.username.set(r.username)));
+      .post<{ token: string; refreshToken: string; username: string }>(
+        `${STS_URL}/api/auth/login`,
+        { username, password, captchaToken },
+      )
+      .pipe(
+        tap((r) => {
+          localStorage.setItem('token', r.token);
+          localStorage.setItem('refreshToken', r.refreshToken);
+          localStorage.setItem('username', r.username);
+          this.username.set(r.username);
+        }),
+      );
   }
 
-  register(username: string, password: string) {
-    return this.http.post(`${STS_URL}/api/auth/register`, { username, password });
+  register(username: string, password: string, captchaToken: string) {
+    return this.http.post(`${STS_URL}/api/auth/register`, { username, password, captchaToken });
   }
 
-  // Re-derives session state from the cookie — call at app startup so a page
-  // reload doesn't look logged-out while the session is still valid server-side.
-  restore() {
+  refresh() {
+    const refreshToken = localStorage.getItem('refreshToken');
     return this.http
-      .get<{ username: string }>(`${STS_URL}/api/auth/me`)
-      .pipe(tap((r) => this.username.set(r.username)));
+      .post<{ token: string }>(`${STS_URL}/api/auth/refresh`, { refreshToken })
+      .pipe(tap((r) => localStorage.setItem('token', r.token)));
   }
 
-  logout() {
-    return this.http.post(`${STS_URL}/api/auth/logout`, {}).pipe(
-      // Best-effort: clear local state even if the network call fails, so a
-      // dead connection can't strand the UI in a "still logged in" state.
-      catchError(() => of(null)),
-      tap(() => this.username.set(null)),
-    );
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('username');
+    this.username.set(null);
   }
 }

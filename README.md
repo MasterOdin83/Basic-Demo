@@ -57,8 +57,9 @@ cd Basic.UI; npm test  # UI tests (vitest)
 
 | Verb | Route | Auth | Description |
 |---|---|---|---|
-| POST | `/api/auth/register` | anonymous | Create user (min 8-char password) |
-| POST | `/api/auth/login` | anonymous | Returns JWT (8h) |
+| POST | `/api/auth/register` | anonymous | Create user (min 8-char password). Body: `username`, `password`, `captchaToken` |
+| POST | `/api/auth/login` | anonymous | Returns `token` (JWT access, 3 min) + `refreshToken` (JWT, 1 day). Body: `username`, `password`, `captchaToken` |
+| POST | `/api/auth/refresh` | anonymous | New access token from a refresh token |
 | GET | `/api/auth/me` | Bearer | Current user info |
 
 **Basic.API** (`http://localhost:5216`)
@@ -75,5 +76,8 @@ cd Basic.UI; npm test  # UI tests (vitest)
 ## Notes
 
 - The JWT signing key in `appsettings.json` is a dev-only value shared by both APIs; in a real deployment it would live in a secret store.
+- **No BFF (decision 2026-09-15)**: each UI talks to its own API plus a separate STS that issues JWTs. The browser holds the tokens (`localStorage`) and the Angular interceptor adds `Authorization: Bearer` and refreshes once on 401. A BFF/cookie session comes back when everything runs in Azure.
+- **Captcha**: login and register require a Cloudflare Turnstile token (`captchaToken`), verified server-side by `CaptchaVerifier`. Dev and QA use Cloudflare's always-pass test keys (site key `1x00000000000000000000AA` in `environment*.ts`, secret `1x0000000000000000000000000000000AA` in `appsettings.Development.json` / `appsettings.QA.json`). Real keys: create a widget in the Cloudflare dashboard → Turnstile, put the site key in `environment.prod.ts` and the secret in the STS App Setting `Captcha__Secret`. Outside Development the STS refuses to start without a secret.
+- **Rate limiting** (built-in `Microsoft.AspNetCore.RateLimiting`, per client IP, fixed window, 429): 10 requests/min on `login`, `register` and `refresh`; 100 requests/min overall on each API. Behind Azure's proxy the client IP comes from `X-Forwarded-For` (`UseForwardedHeaders`, non-Development only).
 - `EnsureCreated()` is used instead of migrations — appropriate for a file-based demo DB, switch to migrations when the schema evolves.
 - Planned second storage backend: Supabase (Postgres) via the Npgsql EF Core provider — same repositories, config-selected.

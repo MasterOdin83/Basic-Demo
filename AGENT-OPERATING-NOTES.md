@@ -14,5 +14,5 @@ _None yet._
 
 - Containerize APIs only (`Basic.API`, `BasicSTS.API`, `SpartanIT.API`) — UI stays on its current static-hosting deploy, not containerized.
 - Local cluster (`kind`/Docker Desktop) first, to prove the pipeline before any AKS spend.
-- BasicSTS.API is where Redis/BFF session work lands eventually — containerize it as its own Deployment/Service from day one even before that lands, so adding Redis later is a config change, not a re-migration.
+- BasicSTS.API is where Redis/BFF session work lands eventually — containerize it as its own Deployment/Service from day one even before that lands, so adding Redis later is a config change, not a re-migration. (deferred 2026-09-15: no BFF until everything runs in Azure; JWT from the STS meanwhile)
 - CI/CD: adapt the existing GitHub Actions workflows (Flagship Demo already has working App Service deploys) to build+push+deploy instead of publish-direct.

@@ -1,8 +1,10 @@
+using System.Text;
 using System.Text.Json.Serialization;
-using Basic.API;
+using System.Threading.RateLimiting;
 using Basic.Data;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,25 +16,42 @@ builder.Services.AddBasicData(builder.Configuration.GetConnectionString("Default
 builder.Services.AddCors(o => o.AddPolicy("ui", p => p
     .WithOrigins(builder.Configuration["Cors:UiOrigin"]!.Split(';'))
     .AllowAnyHeader()
-    .AllowAnyMethod()
-    // Session cookie must ride along on cross-origin fetches from the UI's own origin.
-    .AllowCredentials()));
+    .AllowAnyMethod()));
 
-builder.Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
-    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthenticationHandler.SchemeName, _ => { });
+// ponytail: in-memory counters per instance; if the App Service scales out each instance counts separately.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 100, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+        // Default 5-min skew would keep a 3-min demo token alive for 8; expiry must be exact.
+        ClockSkew = TimeSpan.Zero
+    });
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
 await app.Services.InitializeDatabaseAsync();
 
-// So the session-cookie flow's Secure flag reads correctly behind Azure's
-// TLS-terminating proxy (set on BasicSTS.API, which issues the cookie — this API
-// only validates it, but forwarding headers correctly matters here too for any
-// future scheme-dependent logic).
-app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
+// Behind Azure's proxy the per-IP rate-limit partitions must see the real client IP, not the proxy's.
+if (!app.Environment.IsDevelopment())
+{
+    var fh = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto };
+    fh.KnownIPNetworks.Clear(); fh.KnownProxies.Clear();
+    app.UseForwardedHeaders(fh);
+}
 
 app.UseCors("ui");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
