@@ -69,10 +69,7 @@
         <p class="info" role="status">{{ info() }}</p>
       }
 
-      <!-- Turnstile: the STS refuses login/register without a fresh token, so the button waits for it. -->
-      <div class="captcha" appTurnstile (token)="captchaToken.set($event)"></div>
-
-      <button type="submit" (click)="submit()" [disabled]="busy() || !email || !password || !captchaToken()">
+      <button type="submit" (click)="submit()" [disabled]="busy() || !email || !password">
         {{ mode() === 'login' ? 'Log in' : 'Register' }}
       </button>
     </form>

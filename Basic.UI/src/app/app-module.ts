@@ -9,10 +9,9 @@ import { authInterceptor } from './auth.interceptor';
 import { Home } from './home/home';
 import { Login } from './login/login';
 import { Tasks } from './tasks/tasks';
-import { TurnstileDirective } from './turnstile';
 
 @NgModule({
-  declarations: [App, Home, Login, Tasks, TurnstileDirective],
+  declarations: [App, Home, Login, Tasks],
   imports: [BrowserModule, FormsModule, ReactiveFormsModule, AppRoutingModule],
   providers: [
     provideBrowserGlobalErrorListeners(),
