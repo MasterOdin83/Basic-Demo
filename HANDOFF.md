@@ -1,13 +1,13 @@
-# Handoff — 2026-09-17 (noche) · el demo usa el STS de TurboEmpresa (rama `sts-turbo`, sin merge)
+# Handoff — 2026-09-17 (noche) · el demo usa el STS de TurboEmpresa y el API de Spartan IT (`master` = QA)
 
 ## Resumen para Héctor
 - **Decisión tuya**: un solo STS, el API de TurboEmpresa (`/api/auth`, rama `sts-merge` de TurboEmpresa). `qa-mercenaries-sts` no tiene sentido: borrado su workflow (`master_qa-mercenaries-sts.yml`); borra el App Service cuando quieras.
 - **Hecho (`sts-turbo`)**: `environment.prod.ts` → `stsUrl` = `qa-turboempresa-api…`; `environment.ts` → `http://localhost:5169` (TurboEmpresa.API local). Login con **correo** (el STS de Turbo registra por email, mínimo 8 caracteres). `AuthService`: token de acceso solo en memoria (fuera `localStorage`), `login`/`refresh`/`logout` con `withCredentials` (la cookie HttpOnly `refresh` del STS); el guard de `/tasks` y `App` rehacen la sesión desde la cookie al recargar. El interceptor no cambia (Bearer + refresh ante 401). Fuera el widget de Turnstile de la UI (`turnstile.ts`, script): login y registro piden un token invisible de reCAPTCHA Enterprise con la site key de Turbo (`recaptchaSiteKey`), que el STS verifica. `Basic.API/appsettings.json` valida `Issuer`/`Audience` `TurboEmpresa` con la clave de desarrollo de Turbo; `BasicSTS.API` y los tests quedaron con los mismos valores para que el demo local siga siendo consistente. 39 tests verdes, `ng build` verde.
-- **Te toca**: App Settings de `qa-demo-api`: `Jwt__Key` (la misma que pongas en `qa-turboempresa-api`), `Jwt__Issuer=TurboEmpresa`, `Jwt__Audience=TurboEmpresa`. Mergear **después** de que `sts-merge` esté en `develop` de Turbo con su deploy en verde: `git merge sts-turbo` en `master` y push. En Google Cloud → reCAPTCHA → key `6LcyD1Yt…`: agregar `thankful-sea-0308a2310.7.azurestaticapps.net` (y `localhost`) a los dominios permitidos. Probar login (correo) y `/tasks`. `BasicSTS.API` + `qa-demo-sts` sobran: dime si los borro.
+- **`qa-demo-api` ya no existe** (Héctor, 2026-09-17 noche): el Security Demo es parte de Spartan IT. Las tareas viven en `SpartanIT.API` `/api/tasks` (mismo contrato que Basic.API; siembra 3 tareas por usuario la primera vez; rama `demo-tasks` → `main` de SpartanIT) y `environment.prod.ts` apunta a `qa-spartanit-api`. Mergeado a `master` (QA thankful-sea). **Te toca**: `Jwt__Key` en `qa-spartanit-api` (la misma de Turbo) y en Google Cloud → reCAPTCHA → key `6LcyD1Yt…` agregar `thankful-sea-0308a2310.7.azurestaticapps.net` y `localhost`. `Basic.API`, `BasicSTS.API`, `qa-demo-sts` y sus workflows sobran: dime si los borro.
 - Ojo: Turbo tiene en CORS a thankful-sea (con y sin `.7.`); `TasksController` sigue con `int.Parse` del id (los ids de Turbo son bigint desde 1: sirve).
 
 ## Estado actual
-- `master` = QA (`73958c6`, STS propio). `sts-turbo` en origin, sin merge.
+- `master` = QA thankful-sea: UI contra el STS de Turbo (`qa-turboempresa-api`) y el API de Spartan (`qa-spartanit-api`); funciona cuando ambos tengan `Jwt__Key` y el de Spartan esté desplegado.
 
 ---
 # Handoff — 2026-09-15 (sin BFF: JWT del STS + captcha Turnstile + rate limiting)
