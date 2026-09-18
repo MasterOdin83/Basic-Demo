@@ -17,14 +17,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((err: HttpErrorResponse) => {
       if (err.status !== 401 || req.url.includes('/api/auth/')) return throwError(() => err);
       // ponytail: parallel 401s each hit /refresh; single-flight it if that ever matters.
+      // Only a failed refresh logs out; an error on the retried request is reported as its own status.
       return auth.refresh().pipe(
-        switchMap(() => send(req)),
         catchError(() => {
           auth.logout();
           // No dedicated /login page: home hosts the login drawer.
           router.navigate(['/']);
           return throwError(() => err);
         }),
+        switchMap(() => send(req)),
       );
     }),
   );
