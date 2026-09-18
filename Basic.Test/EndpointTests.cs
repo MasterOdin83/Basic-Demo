@@ -17,8 +17,8 @@ namespace Basic.Test;
 
 internal static class TestApp
 {
-    // Same dev values as both APIs' appsettings.json.
-    public const string JwtKey = "dev-only-secret-key-basic-demo-32chars!!";
+    // Same dev values as both APIs' appsettings.json (and TurboEmpresa.API, the real STS).
+    public const string JwtKey = "dev-only-secret-key-turboempresa-32chars!";
 
     // captchaSecret: empty = Turnstile off (the default for every test); anything else makes the STS
     // demand a token, and a missing token is rejected locally — no call to Cloudflare happens.
@@ -41,8 +41,8 @@ internal static class TestApp
     public static string TokenFor(int userId, string username, DateTime? expires = null) =>
         new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
-            Issuer = "BasicSTS",
-            Audience = "BasicApp",
+            Issuer = "TurboEmpresa",
+            Audience = "TurboEmpresa",
             Subject = new ClaimsIdentity(
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),

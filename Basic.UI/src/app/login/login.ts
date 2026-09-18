@@ -23,7 +23,7 @@ export class Login {
   readonly showPassword = signal(false);
   // Turnstile token: '' until the widget passes, and again after every submit (tokens are single use).
   readonly captchaToken = signal('');
-  username = '';
+  email = '';
   password = '';
 
   toggleMode(): void {
@@ -46,7 +46,7 @@ export class Login {
     const captchaToken = this.captchaToken();
 
     if (this.mode() === 'login') {
-      this.auth.login(this.username, this.password, captchaToken).subscribe({
+      this.auth.login(this.email, this.password, captchaToken).subscribe({
         next: () => this.router.navigate(['/tasks']),
         error: (e: HttpErrorResponse) => {
           this.busy.set(false);
@@ -55,7 +55,7 @@ export class Login {
         },
       });
     } else {
-      this.auth.register(this.username, this.password, captchaToken).subscribe({
+      this.auth.register(this.email, this.password, captchaToken).subscribe({
         next: () => {
           this.busy.set(false);
           this.mode.set('login');

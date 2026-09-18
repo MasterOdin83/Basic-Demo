@@ -14,6 +14,11 @@ export class App {
   private loginDrawer = viewChild<ElementRef<HTMLDialogElement>>('loginDrawer');
   private menuDrawer = viewChild<ElementRef<HTMLDialogElement>>('menuDrawer');
 
+  constructor() {
+    // Rebuild the session from the refresh cookie on page load, so the header shows the user without visiting /tasks.
+    this.auth.refresh().subscribe({ error: () => {} });
+  }
+
   openLogin(): void {
     this.loginDrawer()?.nativeElement.showModal();
   }

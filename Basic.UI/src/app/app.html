@@ -1,6 +1,6 @@
 <header class="topbar">
   <h1><a routerLink="/">Security Demo</a></h1>
-  @if (auth.username()) {
+  @if (auth.email()) {
     <button type="button" class="menu-toggle" aria-label="Menu" aria-haspopup="dialog" (click)="openMenu()">☰</button>
     <!-- Desktop-only nav — hidden below 1200px (see .nav-group media query in
          styles.css). Kept as its own markup, not shared with the drawer below,
@@ -17,7 +17,7 @@
             <circle cx="8" cy="5" r="2.75"/>
             <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>
           </svg>
-          {{ auth.username() }}
+          {{ auth.email() }}
         </span>
         <button type="button" class="secondary" (click)="logout()">
           <svg class="btnIcon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -48,7 +48,7 @@
 <!-- Native <dialog>: focus trap, Esc and backdrop for free — same pattern as the
      login drawer below, reused rather than a bespoke dropdown panel. Removed from
      the DOM on logout, which also closes it if it happened to be open. -->
-@if (auth.username()) {
+@if (auth.email()) {
   <dialog
     #menuDrawer
     class="drawer"
@@ -63,7 +63,7 @@
             <circle cx="8" cy="5" r="2.75"/>
             <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>
           </svg>
-          {{ auth.username() }}
+          {{ auth.email() }}
         </span>
         <button type="button" class="secondary" (click)="logout()">
           <svg class="btnIcon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -1,10 +1,9 @@
 // QA/production API origins — scheme included, or HttpClient treats them as relative paths.
 export const environment = {
   production: true,
-  // STS de QA hoy: qa-demo-sts. El STS compartido nuevo es
-  // https://qa-mercenaries-sts-gcexaggxdme7gffs.westus3-01.azurewebsites.net (workflow
-  // master_qa-mercenaries-sts.yml): cambiar aquí cuando su primer deploy esté en verde.
-  stsUrl: 'https://qa-demo-sts-h3dxfshgapatdsdf.centralus-01.azurewebsites.net',
+  // The STS is TurboEmpresa's API (QA): one STS for every site (Héctor, 2026-09-17). Its /api/auth issues the
+  // JWTs that Basic.API validates (same Jwt__Key / Issuer / Audience in both App Services).
+  stsUrl: 'https://qa-turboempresa-api-c4ejaqfngrbhf2cu.centralus-01.azurewebsites.net',
   apiUrl: 'https://qa-demo-api-a3dhdwf0aqdbcnck.centralus-01.azurewebsites.net',
   spartanItAboutUrl: 'https://proud-coast-051f45010.7.azurestaticapps.net/en/about',
   // Cloudflare Turnstile TEST site key (always passes, visible widget). Replace with the real

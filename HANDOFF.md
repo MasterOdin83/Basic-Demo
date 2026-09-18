@@ -1,3 +1,15 @@
+# Handoff — 2026-09-17 (noche) · el demo usa el STS de TurboEmpresa (rama `sts-turbo`, sin merge)
+
+## Resumen para Héctor
+- **Decisión tuya**: un solo STS, el API de TurboEmpresa (`/api/auth`, rama `sts-merge` de TurboEmpresa). `qa-mercenaries-sts` no tiene sentido: borrado su workflow (`master_qa-mercenaries-sts.yml`); borra el App Service cuando quieras.
+- **Hecho (`sts-turbo`)**: `environment.prod.ts` → `stsUrl` = `qa-turboempresa-api…`; `environment.ts` → `http://localhost:5169` (TurboEmpresa.API local). Login con **correo** (el STS de Turbo registra por email, mínimo 8 caracteres). `AuthService`: token de acceso solo en memoria (fuera `localStorage`), `login`/`refresh`/`logout` con `withCredentials` (la cookie HttpOnly `refresh` del STS); el guard de `/tasks` y `App` rehacen la sesión desde la cookie al recargar. El interceptor no cambia (Bearer + refresh ante 401). `Basic.API/appsettings.json` valida `Issuer`/`Audience` `TurboEmpresa` con la clave de desarrollo de Turbo; `BasicSTS.API` y los tests quedaron con los mismos valores para que el demo local siga siendo consistente. 39 tests verdes, `ng build` verde.
+- **Te toca**: App Settings de `qa-demo-api`: `Jwt__Key` (la misma que pongas en `qa-turboempresa-api`), `Jwt__Issuer=TurboEmpresa`, `Jwt__Audience=TurboEmpresa`. Mergear **después** de que `sts-merge` esté en `develop` de Turbo con su deploy en verde: `git merge sts-turbo` en `master` y push. Probar login (correo + widget) y `/tasks`. `BasicSTS.API` + `qa-demo-sts` sobran: dime si los borro.
+- Ojo: Turbo tiene en CORS a thankful-sea (con y sin `.7.`); `TasksController` sigue con `int.Parse` del id (los ids de Turbo son bigint desde 1: sirve).
+
+## Estado actual
+- `master` = QA (`73958c6`, STS propio). `sts-turbo` en origin, sin merge.
+
+---
 # Handoff — 2026-09-15 (sin BFF: JWT del STS + captcha Turnstile + rate limiting)
 
 ## Resumen para Héctor

@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
-  stsUrl: 'http://localhost:5143',
+  // TurboEmpresa.API run locally (its launchSettings http profile): it is the STS for every site.
+  stsUrl: 'http://localhost:5169',
   apiUrl: 'http://localhost:5216',
   spartanItAboutUrl: 'http://localhost:55112/en/about',
   // Cloudflare Turnstile test site key: always passes, renders the real widget.
