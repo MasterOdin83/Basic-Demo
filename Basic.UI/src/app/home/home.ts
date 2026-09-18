@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { observeReveals } from './reveal';
 import { parseRequirements, RequirementItem } from './requirements';
@@ -10,6 +10,7 @@ import { observeSpotlight } from './spotlight';
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: false,
 })
 export class Home implements OnInit, AfterViewInit, OnDestroy {

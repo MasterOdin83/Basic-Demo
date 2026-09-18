@@ -1,3 +1,11 @@
+# Handoff — 2026-09-17 (noche, 2) · Basic.UI en Angular 22
+
+## Resumen para Héctor
+- **Hecho**: `ng update @angular/cli@22 @angular/core@22` en `Basic.UI`: Angular 22.1.7, CLI 22.1.8, TypeScript 6.0. Migraciones automáticas: `changeDetection: ChangeDetectionStrategy.Eager` en cada componente existente (en v22 el default pasa a OnPush; Eager conserva el comportamiento de antes), `withXhr()` en `provideHttpClient` (v22 usa fetch por default), diagnósticos `nullishCoalescingNotNullable`/`optionalChainNotNullable` suprimidos en `tsconfig.app.json`. `engines.node` en `package.json` (`^22.22.3 || ^24.15.0`) para que Oryx elija un Node que Angular 22 acepte. `ng build` verde; 25 tests de UI verdes (el spec del guard se reescribió para el guard nuevo: token en memoria o refresh por cookie).
+- **Ojo en el primer deploy**: si el build de la Static Web App falla por versión de Node, la salida es compilar en el runner (`actions/setup-node` 24 + `skip_app_build`), como ya hace `prod-hostinger-ui.yml` de Turbo.
+- **Siguiente (cuando lo pidas)**: reglas de Angular 22 como archivo de reglas por repo (la decisión pendiente es standalone vs NgModule; hoy los tres bootstrapean con NgModule) y quitar los `Eager` componente por componente probando en QA.
+
+---
 # Handoff — 2026-09-17 (noche) · el demo usa el STS de TurboEmpresa y el API de Spartan IT (`master` = QA)
 
 ## Resumen para Héctor

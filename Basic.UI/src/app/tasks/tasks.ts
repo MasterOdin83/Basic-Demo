@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { TaskItem, TaskStatus } from '../api';
 import { TaskPayload, TasksService } from '../tasks.service';
@@ -16,6 +16,7 @@ type TaskForm = ReturnType<typeof buildTaskForm>;
 @Component({
   selector: 'app-tasks',
   templateUrl: './tasks.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: false,
 })
 export class Tasks implements OnInit {

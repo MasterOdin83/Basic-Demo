@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
   selector: 'app-root',
   templateUrl: './app.html',
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.css',
 })
 export class App {

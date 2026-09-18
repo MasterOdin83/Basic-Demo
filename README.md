@@ -7,7 +7,7 @@ Simple task management app built for a .NET technical interview exercise: Clean 
 ## Architecture
 
 ```
-Basic.UI       Angular 21 UI (login + tasks CRUD)
+Basic.UI       Angular 22 UI (login + tasks CRUD)
 Basic.API      Tasks CRUD Web API (JWT-protected)        ─┐
 BasicSTS.API   Auth Web API: register / login / me       ─┤→ Basic.Data → Basic.Core
 Basic.Data     EF Core + SQLite repositories, seed        │
