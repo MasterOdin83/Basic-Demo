@@ -1,3 +1,13 @@
+# Handoff — 2026-09-17 (cierre) · demo contra el STS de Turbo y el API de Spartan; Angular 22 (`master` = QA)
+
+## Estado actual
+- `master` `3f18e14` = QA thankful-sea. La UI entra por correo + reCAPTCHA contra `qa-turboempresa-api` (STS) y pide sus tareas a `qa-spartanit-api` (`/api/tasks`). Funciona cuando ambos APIs tengan `Jwt__Key` y el de Spartan esté desplegado. `Basic.API`, `BasicSTS.API`, `qa-demo-sts` y sus workflows ya no se usan.
+
+## Next steps
+1. Héctor: `Jwt__Key` en los dos App Services; dominio `thankful-sea-0308a2310.7.azurestaticapps.net` (y `localhost`) en la key de reCAPTCHA en Google Cloud; decidir si borro `Basic.API`/`BasicSTS.API` y si la UI del demo se mueve al sitio de Spartan.
+2. Probar: login por correo, `/tasks` con las 3 tareas sembradas, recarga conserva la sesión.
+
+---
 # Handoff — 2026-09-17 (noche, 2) · Basic.UI en Angular 22
 
 ## Resumen para Héctor
